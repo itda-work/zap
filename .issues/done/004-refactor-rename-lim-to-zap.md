@@ -1,14 +1,14 @@
 ---
 number: 4
 title: "refactor: 프로젝트명 lim → zap 변경"
-state: in-progress
+state: done
 labels:
   - refactor
 assignees:
   - allieus
 created_at: 2026-01-15T00:00:00Z
 updated_at: 2026-01-15T00:00:00Z
-closed_at:
+closed_at: 2026-01-15T00:00:00Z
 ---
 
 ## 개요
@@ -52,6 +52,7 @@ closed_at:
 - [x] Makefile 업데이트
 - [x] GitHub Actions 릴리즈 워크플로우 추가
 - [x] 빌드 및 테스트 검증
+- [x] v0.2.0 릴리즈
 
 ## 진행 내역
 
@@ -77,15 +78,18 @@ closed_at:
 6. **GitHub Actions 릴리즈 워크플로우**:
    - `.github/workflows/release.yml` 생성
    - `v*` 태그 push 시 자동 실행
-   - 멀티 플랫폼 바이너리 빌드 (linux/darwin/windows, amd64/arm64)
+   - 멀티 플랫폼 바이너리 빌드
    - 자동 릴리즈 생성 및 체크섬 파일 포함
 
-7. **검증 완료**:
-   - `go build` 성공
-   - `go test` 전체 통과
-   - `zap --help`, `zap version`, `zap list` 정상 동작
+7. **Makefile 개선**:
+   - `make build-all`: 모든 플랫폼 빌드 (dist/ 폴더)
+   - `make release TAG=vX.Y.Z`: 빌드 + GitHub 릴리즈 생성
+   - 지원 플랫폼: Linux/macOS/Windows × amd64/arm64
 
----
+8. **버전 출력 개선**:
+   - 빌드 날짜 포함: `zap version v0.2.0 (built 2026-01-15)`
+   - ldflags로 Version, BuildDate 주입
 
-- 이슈 생성
-- 변경 범위 분석 완료
+9. **v0.2.0 릴리즈 완료**:
+   - https://github.com/itda-work/zap/releases/tag/v0.2.0
+   - 6개 바이너리 + checksums.txt
