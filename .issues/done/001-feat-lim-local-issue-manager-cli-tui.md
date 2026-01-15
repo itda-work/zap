@@ -152,7 +152,7 @@ gopkg.in/yaml.v3                     # YAML 파싱
 - [x] root 명령어 설정
 - [x] `lim list` 구현
 - [x] `lim show` 구현
-- [x] `lim open/start/done/close` 구현
+- [x] `lim open/start/done` 구현
 - [x] `lim search` 구현
 - [x] `lim stats` 구현
 
@@ -164,13 +164,21 @@ gopkg.in/yaml.v3                     # YAML 파싱
 - [x] 스타일링
 
 ### Phase 5: 마무리
-- [ ] 테스트 작성
-- [ ] README 작성
-- [ ] 빌드 및 설치 스크립트
+- [x] 테스트 작성
+- [x] README 작성
+- [x] 빌드 및 설치 스크립트 (Makefile)
 
 ## 진행 내역
 
 ### 2026-01-15
+
+#### Phase 5 완료: 테스트, README, Makefile
+
+- 테스트 작성 (`internal/issue/issue_test.go`, `parser_test.go`)
+- README.md 작성 (설치, 사용법, 파일 형식 문서화)
+- Makefile 작성 (build, install, test, clean, cross-compile)
+- closed 상태 제거 → open/in-progress/done 3가지 상태로 단순화
+- 첫 커밋: `877c0ed`
 
 #### 초기 구현 완료
 
