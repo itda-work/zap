@@ -1,8 +1,9 @@
-.PHONY: build install test clean
+.PHONY: build install test clean fmt lint build-all release dist-clean
 
 BINARY := zap
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS := -ldflags "-s -w -X github.com/itda-work/zap/internal/cli.Version=$(VERSION)"
+DIST := dist
 
 build:
 	go build $(LDFLAGS) -o $(BINARY) ./cmd/zap/
@@ -20,21 +21,32 @@ test-cover:
 clean:
 	rm -f $(BINARY) coverage.out coverage.html
 
+dist-clean:
+	rm -rf $(DIST)
+
 fmt:
 	go fmt ./...
 
 lint:
 	golangci-lint run
 
-# Cross-compilation
-build-all: build-linux build-darwin build-windows
+# Cross-compilation (all platforms)
+build-all: dist-clean
+	@mkdir -p $(DIST)
+	@echo "Building for Linux..."
+	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(DIST)/$(BINARY)-linux-amd64 ./cmd/zap/
+	GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(DIST)/$(BINARY)-linux-arm64 ./cmd/zap/
+	@echo "Building for macOS..."
+	GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(DIST)/$(BINARY)-macos-amd64 ./cmd/zap/
+	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(DIST)/$(BINARY)-macos-arm64 ./cmd/zap/
+	@echo "Building for Windows..."
+	GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(DIST)/$(BINARY)-windows-amd64.exe ./cmd/zap/
+	GOOS=windows GOARCH=arm64 go build $(LDFLAGS) -o $(DIST)/$(BINARY)-windows-arm64.exe ./cmd/zap/
+	@echo "Creating checksums..."
+	cd $(DIST) && sha256sum * > checksums.txt
+	@echo "Done! Binaries in $(DIST)/"
 
-build-linux:
-	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY)-linux-amd64 ./cmd/zap/
-
-build-darwin:
-	GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY)-darwin-amd64 ./cmd/zap/
-	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(BINARY)-darwin-arm64 ./cmd/zap/
-
-build-windows:
-	GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY)-windows-amd64.exe ./cmd/zap/
+# Create GitHub release (requires gh CLI)
+release: build-all
+	@if [ -z "$(TAG)" ]; then echo "Usage: make release TAG=v0.2.0"; exit 1; fi
+	gh release create $(TAG) $(DIST)/* --title "$(TAG)" --generate-notes

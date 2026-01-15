@@ -1,7 +1,7 @@
 # Binary
 /zap
 /zap-*
-*.exe
+/dist/
 
 # IDE
 .idea/
