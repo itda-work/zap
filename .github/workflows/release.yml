@@ -44,6 +44,9 @@ jobs:
           # Windows amd64
           GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X github.com/itda-work/zap/internal/cli.Version=${VERSION}" -o dist/zap-windows-amd64.exe ./cmd/zap
 
+          # Windows arm64
+          GOOS=windows GOARCH=arm64 go build -ldflags="-s -w -X github.com/itda-work/zap/internal/cli.Version=${VERSION}" -o dist/zap-windows-arm64.exe ./cmd/zap
+
       - name: Create checksums
         run: |
           cd dist
@@ -58,5 +61,6 @@ jobs:
             dist/zap-macos-amd64
             dist/zap-macos-arm64
             dist/zap-windows-amd64.exe
+            dist/zap-windows-arm64.exe
             dist/checksums.txt
           generate_release_notes: true
