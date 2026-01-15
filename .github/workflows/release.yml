@@ -28,24 +28,26 @@ jobs:
       - name: Build binaries
         run: |
           VERSION=${GITHUB_REF_NAME}
+          BUILD_DATE=$(date -u +%Y-%m-%d)
+          LDFLAGS="-s -w -X github.com/itda-work/zap/internal/cli.Version=${VERSION} -X github.com/itda-work/zap/internal/cli.BuildDate=${BUILD_DATE}"
 
           # Linux amd64
-          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X github.com/itda-work/zap/internal/cli.Version=${VERSION}" -o dist/zap-linux-amd64 ./cmd/zap
+          GOOS=linux GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/zap-linux-amd64 ./cmd/zap
 
           # Linux arm64
-          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X github.com/itda-work/zap/internal/cli.Version=${VERSION}" -o dist/zap-linux-arm64 ./cmd/zap
+          GOOS=linux GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/zap-linux-arm64 ./cmd/zap
 
           # macOS amd64 (Intel)
-          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X github.com/itda-work/zap/internal/cli.Version=${VERSION}" -o dist/zap-macos-amd64 ./cmd/zap
+          GOOS=darwin GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/zap-macos-amd64 ./cmd/zap
 
           # macOS arm64 (Apple Silicon)
-          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X github.com/itda-work/zap/internal/cli.Version=${VERSION}" -o dist/zap-macos-arm64 ./cmd/zap
+          GOOS=darwin GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/zap-macos-arm64 ./cmd/zap
 
           # Windows amd64
-          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X github.com/itda-work/zap/internal/cli.Version=${VERSION}" -o dist/zap-windows-amd64.exe ./cmd/zap
+          GOOS=windows GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/zap-windows-amd64.exe ./cmd/zap
 
           # Windows arm64
-          GOOS=windows GOARCH=arm64 go build -ldflags="-s -w -X github.com/itda-work/zap/internal/cli.Version=${VERSION}" -o dist/zap-windows-arm64.exe ./cmd/zap
+          GOOS=windows GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/zap-windows-arm64.exe ./cmd/zap
 
       - name: Create checksums
         run: |
