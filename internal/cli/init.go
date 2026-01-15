@@ -122,9 +122,10 @@ func generateInstructions(header string) string {
 
 ` + "```" + `
 .issues/
-├── open/           # 새로 생성된 이슈
-├── in-progress/    # 진행 중인 이슈
-└── done/           # 완료된 이슈
+├── open/           # 대기 중
+├── in-progress/    # 진행 중
+├── done/           # 완료
+└── closed/         # 취소/보류
 ` + "```" + `
 
 이슈 파일은 해당 상태의 디렉토리에 위치하며, 상태 변경 시 파일이 다른 디렉토리로 이동됩니다.
@@ -179,6 +180,7 @@ zap show 1 --raw            # 원본 마크다운 출력
 zap open 1                  # → open/ (이슈 재오픈)
 zap start 1                 # → in-progress/ (작업 시작)
 zap done 1                  # → done/ (작업 완료)
+zap close 1                 # → closed/ (취소/보류)
 ` + "```" + `
 
 ### 검색
@@ -199,6 +201,7 @@ zap stats                   # 상태별 이슈 수, 최근 활동
 1. **새 이슈 생성**: ` + "`.issues/open/NNN-slug.md`" + ` 파일을 직접 생성
 2. **작업 시작**: ` + "`zap start <number>`" + ` 실행
 3. **작업 완료**: ` + "`zap done <number>`" + ` 실행
+4. **취소/보류**: ` + "`zap close <number>`" + ` 실행
 
 ## 주의사항
 

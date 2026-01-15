@@ -80,6 +80,7 @@ func printIssueList(issues []*issue.Issue) {
 		issue.StateOpen:       "○",
 		issue.StateInProgress: "◐",
 		issue.StateDone:       "●",
+		issue.StateClosed:     "✕",
 	}
 
 	for _, iss := range issues {

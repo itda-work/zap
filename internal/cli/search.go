@@ -50,6 +50,7 @@ func printSearchResults(issues []*issue.Issue, keyword string) {
 		issue.StateOpen:       "○",
 		issue.StateInProgress: "◐",
 		issue.StateDone:       "●",
+		issue.StateClosed:     "✕",
 	}
 
 	for _, iss := range issues {

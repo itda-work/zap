@@ -11,11 +11,12 @@ const (
 	StateOpen       State = "open"
 	StateInProgress State = "in-progress"
 	StateDone       State = "done"
+	StateClosed     State = "closed"
 )
 
 // AllStates returns all valid states
 func AllStates() []State {
-	return []State{StateOpen, StateInProgress, StateDone}
+	return []State{StateOpen, StateInProgress, StateDone, StateClosed}
 }
 
 // ActiveStates returns states considered "active" (not done)
@@ -60,6 +61,8 @@ func ParseState(s string) (State, bool) {
 		return StateInProgress, true
 	case "done":
 		return StateDone, true
+	case "closed":
+		return StateClosed, true
 	default:
 		return "", false
 	}

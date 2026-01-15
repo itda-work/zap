@@ -29,10 +29,18 @@ var doneCmd = &cobra.Command{
 	RunE:  makeMoveFunc(issue.StateDone),
 }
 
+var closeCmd = &cobra.Command{
+	Use:   "close <number>",
+	Short: "Move issue to closed state (cancelled/on-hold)",
+	Args:  cobra.ExactArgs(1),
+	RunE:  makeMoveFunc(issue.StateClosed),
+}
+
 func init() {
 	rootCmd.AddCommand(openCmd)
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(doneCmd)
+	rootCmd.AddCommand(closeCmd)
 }
 
 func makeMoveFunc(targetState issue.State) func(*cobra.Command, []string) error {

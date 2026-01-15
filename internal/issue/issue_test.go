@@ -11,8 +11,8 @@ func TestParseState(t *testing.T) {
 		{"open", StateOpen, true},
 		{"in-progress", StateInProgress, true},
 		{"done", StateDone, true},
+		{"closed", StateClosed, true},
 		{"invalid", "", false},
-		{"closed", "", false}, // closed is no longer valid
 		{"", "", false},
 	}
 
@@ -31,11 +31,11 @@ func TestParseState(t *testing.T) {
 
 func TestAllStates(t *testing.T) {
 	states := AllStates()
-	if len(states) != 3 {
-		t.Errorf("AllStates() returned %d states, want 3", len(states))
+	if len(states) != 4 {
+		t.Errorf("AllStates() returned %d states, want 4", len(states))
 	}
 
-	expected := []State{StateOpen, StateInProgress, StateDone}
+	expected := []State{StateOpen, StateInProgress, StateDone, StateClosed}
 	for i, s := range expected {
 		if states[i] != s {
 			t.Errorf("AllStates()[%d] = %q, want %q", i, states[i], s)
@@ -62,6 +62,7 @@ func TestStateDir(t *testing.T) {
 		{StateOpen, "open"},
 		{StateInProgress, "in-progress"},
 		{StateDone, "done"},
+		{StateClosed, "closed"},
 	}
 
 	for _, tt := range tests {
@@ -82,6 +83,7 @@ func TestIssueIsActive(t *testing.T) {
 		{StateOpen, true},
 		{StateInProgress, true},
 		{StateDone, false},
+		{StateClosed, false},
 	}
 
 	for _, tt := range tests {
