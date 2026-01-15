@@ -87,12 +87,56 @@ func renderMarkdown(content string) (string, error) {
 	renderer, err := glamour.NewTermRenderer(
 		glamour.WithAutoStyle(),
 		glamour.WithWordWrap(100),
+		glamour.WithStylesFromJSONBytes([]byte(compactStyle)),
 	)
 	if err != nil {
 		return "", err
 	}
-	return renderer.Render(content)
+	rendered, err := renderer.Render(content)
+	if err != nil {
+		return "", err
+	}
+	// 연속된 빈 줄을 하나로 줄임
+	rendered = reduceBlankLines(rendered)
+	// glamour는 끝에 개행을 추가하므로 제거
+	return strings.TrimSuffix(rendered, "\n"), nil
 }
+
+// reduceBlankLines reduces multiple consecutive blank lines to a single one
+func reduceBlankLines(s string) string {
+	lines := strings.Split(s, "\n")
+	var result []string
+	prevBlank := false
+
+	for _, line := range lines {
+		isBlank := strings.TrimSpace(line) == ""
+		if isBlank && prevBlank {
+			continue // 연속 빈 줄 스킵
+		}
+		result = append(result, line)
+		prevBlank = isBlank
+	}
+
+	return strings.Join(result, "\n")
+}
+
+// 리스트 항목 사이 여백을 제거한 컴팩트 스타일
+const compactStyle = `{
+	"list": {
+		"level_indent": 2,
+		"margin": 0
+	},
+	"item": {
+		"block_prefix": "",
+		"margin": 0
+	},
+	"paragraph": {
+		"margin": 0
+	},
+	"code_block": {
+		"margin": 0
+	}
+}`
 
 func printRawIssue(iss *issue.Issue) {
 	data, err := issue.Serialize(iss)
