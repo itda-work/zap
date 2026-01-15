@@ -67,11 +67,21 @@ fmt.Print(out)
 
 ## 작업 목록
 
-- [ ] glamour 의존성 추가
-- [ ] CLI show 명령어에 glamour 렌더링 적용
-- [ ] TUI 상세 뷰에 glamour 렌더링 적용
-- [ ] 터미널 너비에 맞는 word wrap 설정
-- [ ] 테마 설정 옵션 추가 (선택)
+- [x] glamour 의존성 추가
+- [x] CLI show 명령어에 glamour 렌더링 적용
+- [x] TUI 상세 뷰에 glamour 렌더링 적용
+- [x] 터미널 너비에 맞는 word wrap 설정
+- [ ] 테마 설정 옵션 추가 (선택, 추후)
+
+## 진행 내역
+
+### 2026-01-15
+
+- glamour v0.10.0 의존성 추가
+- CLI `lim show` 명령어에 glamour 렌더링 적용 (`internal/cli/show.go`)
+- TUI 상세 뷰에 glamour 렌더링 적용 (`internal/tui/app.go`)
+- 자동 스타일 감지 (`glamour.WithAutoStyle()`)
+- 터미널 너비에 맞는 word wrap 적용
 
 ## 참고
 

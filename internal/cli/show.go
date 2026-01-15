@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/allieus/lim/internal/issue"
+	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 )
 
@@ -73,8 +74,24 @@ func printIssueDetail(iss *issue.Issue) {
 	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
 	if iss.Body != "" {
-		fmt.Printf("\n%s\n", iss.Body)
+		rendered, err := renderMarkdown(iss.Body)
+		if err != nil {
+			fmt.Printf("\n%s\n", iss.Body)
+		} else {
+			fmt.Print(rendered)
+		}
 	}
+}
+
+func renderMarkdown(content string) (string, error) {
+	renderer, err := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(100),
+	)
+	if err != nil {
+		return "", err
+	}
+	return renderer.Render(content)
 }
 
 func printRawIssue(iss *issue.Issue) {

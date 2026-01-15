@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/fsnotify/fsnotify"
 )
@@ -332,7 +333,21 @@ func (m model) renderDetailView() string {
 
 	body := ""
 	if iss.Body != "" {
-		body = "\n" + iss.Body
+		// glamour로 마크다운 렌더링
+		renderer, err := glamour.NewTermRenderer(
+			glamour.WithAutoStyle(),
+			glamour.WithWordWrap(m.width-8),
+		)
+		if err == nil {
+			rendered, err := renderer.Render(iss.Body)
+			if err == nil {
+				body = rendered
+			} else {
+				body = "\n" + iss.Body
+			}
+		} else {
+			body = "\n" + iss.Body
+		}
 	}
 
 	help := lipgloss.NewStyle().
