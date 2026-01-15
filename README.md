@@ -4,11 +4,27 @@
 
 ## 설치
 
+### One-Line 설치 (권장)
+
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/itda-work/zap/main/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/itda-work/zap/main/scripts/install.ps1 | iex
+```
+
+### Go로 설치
+
 ```bash
 go install github.com/itda-work/zap/cmd/zap@latest
 ```
 
-또는 소스에서 빌드:
+### 소스에서 빌드
 
 ```bash
 git clone https://github.com/itda-work/zap.git
@@ -33,6 +49,7 @@ zap show 1 --raw            # 원본 마크다운
 zap open 1                  # → open/
 zap start 1                 # → in-progress/
 zap done 1                  # → done/
+zap close 1                 # → closed/ (취소/보류)
 
 # 검색 & 통계
 zap search "키워드"          # 제목/내용 검색
@@ -53,7 +70,8 @@ zap init claude --path AI_GUIDE.md  # 지정 파일에 생성
 .issues/
 ├── open/           # 새로 생성된 이슈
 ├── in-progress/    # 진행 중
-└── done/           # 완료
+├── done/           # 완료
+└── closed/         # 취소/보류
 ```
 
 이슈 파일 (`001-feature-name.md`):
