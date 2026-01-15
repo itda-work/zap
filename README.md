@@ -1,6 +1,6 @@
 # lim - Local Issue Manager
 
-`.issues/` 디렉토리 내 로컬 이슈를 관리하는 CLI/TUI 도구입니다.
+`.issues/` 디렉토리 내 로컬 이슈를 관리하는 CLI 도구입니다.
 
 ## 설치
 
@@ -17,8 +17,6 @@ make install
 ```
 
 ## 사용법
-
-### CLI
 
 ```bash
 # 이슈 목록
@@ -40,24 +38,12 @@ lim done 1                  # → done/
 lim search "키워드"          # 제목/내용 검색
 lim stats                   # 통계 대시보드
 
-# TUI 모드
-lim                         # 인자 없으면 TUI
-lim tui                     # 명시적 TUI
+# AI 에이전트 지침 파일 생성
+lim init claude             # CLAUDE.md 생성
+lim init codex              # AGENTS.md 생성
+lim init gemini             # GEMINI.md 생성
+lim init claude --path AI_GUIDE.md  # 지정 파일에 생성
 ```
-
-### TUI 키보드 단축키
-
-| 키 | 동작 |
-|---|------|
-| `j/k` 또는 `↑/↓` | 이동 |
-| `Enter` | 상세 보기 |
-| `q` 또는 `Esc` | 뒤로/종료 |
-| `1` | open만 표시 |
-| `2` | in-progress만 표시 |
-| `3` | done만 표시 |
-| `0` | 전체 표시 |
-| `/` | 검색 |
-| `r` | 새로고침 |
 
 ## 이슈 파일 형식
 
@@ -84,7 +70,6 @@ assignees:
   - username
 created_at: 2026-01-15T00:00:00Z
 updated_at: 2026-01-15T00:00:00Z
-closed_at:
 ---
 
 ## 개요
