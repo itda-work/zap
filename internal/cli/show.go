@@ -96,25 +96,21 @@ func renderMarkdown(content string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// 연속된 빈 줄을 하나로 줄임
-	rendered = reduceBlankLines(rendered)
+	// 빈 줄 모두 제거
+	rendered = removeBlankLines(rendered)
 	// glamour는 끝에 개행을 추가하므로 제거
 	return strings.TrimSuffix(rendered, "\n"), nil
 }
 
-// reduceBlankLines reduces multiple consecutive blank lines to a single one
-func reduceBlankLines(s string) string {
+// removeBlankLines removes all blank lines (lines with only whitespace)
+func removeBlankLines(s string) string {
 	lines := strings.Split(s, "\n")
 	var result []string
-	prevBlank := false
 
 	for _, line := range lines {
-		isBlank := strings.TrimSpace(line) == ""
-		if isBlank && prevBlank {
-			continue // 연속 빈 줄 스킵
+		if strings.TrimSpace(line) != "" {
+			result = append(result, line)
 		}
-		result = append(result, line)
-		prevBlank = isBlank
 	}
 
 	return strings.Join(result, "\n")

@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/allieus/lim/internal/issue"
@@ -341,7 +342,7 @@ func (m model) renderDetailView() string {
 		if err == nil {
 			rendered, err := renderer.Render(iss.Body)
 			if err == nil {
-				body = rendered
+				body = removeBlankLines(rendered)
 			} else {
 				body = "\n" + iss.Body
 			}
@@ -358,4 +359,18 @@ func (m model) renderDetailView() string {
 	content := header + "\n" + metaRendered + body + "\n\n" + help
 
 	return contentStyle.Render(content)
+}
+
+// removeBlankLines removes all blank lines (lines with only whitespace)
+func removeBlankLines(s string) string {
+	lines := strings.Split(s, "\n")
+	var result []string
+
+	for _, line := range lines {
+		if strings.TrimSpace(line) != "" {
+			result = append(result, line)
+		}
+	}
+
+	return strings.Join(result, "\n")
 }
