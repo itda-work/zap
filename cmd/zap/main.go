@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/allieus/lim/internal/cli"
+	"github.com/itda-work/zap/internal/cli"
 )
 
 func main() {

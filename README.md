@@ -1,18 +1,18 @@
-# lim - Local Issue Manager
+# zap - Local Issue Manager
 
 `.issues/` 디렉토리 내 로컬 이슈를 관리하는 CLI 도구입니다.
 
 ## 설치
 
 ```bash
-go install github.com/allieus/lim/cmd/lim@latest
+go install github.com/itda-work/zap/cmd/zap@latest
 ```
 
 또는 소스에서 빌드:
 
 ```bash
-git clone https://github.com/allieus/lim.git
-cd lim
+git clone https://github.com/itda-work/zap.git
+cd zap
 make install
 ```
 
@@ -20,29 +20,29 @@ make install
 
 ```bash
 # 이슈 목록
-lim list                    # 활성 이슈 (open + in-progress)
-lim list --all              # 전체 이슈
-lim list --state done       # 특정 상태
-lim list --label bug        # 레이블 필터
+zap list                    # 활성 이슈 (open + in-progress)
+zap list --all              # 전체 이슈
+zap list --state done       # 특정 상태
+zap list --label bug        # 레이블 필터
 
 # 이슈 상세
-lim show 1                  # 이슈 #1 상세
-lim show 1 --raw            # 원본 마크다운
+zap show 1                  # 이슈 #1 상세
+zap show 1 --raw            # 원본 마크다운
 
 # 상태 변경
-lim open 1                  # → open/
-lim start 1                 # → in-progress/
-lim done 1                  # → done/
+zap open 1                  # → open/
+zap start 1                 # → in-progress/
+zap done 1                  # → done/
 
 # 검색 & 통계
-lim search "키워드"          # 제목/내용 검색
-lim stats                   # 통계 대시보드
+zap search "키워드"          # 제목/내용 검색
+zap stats                   # 통계 대시보드
 
 # AI 에이전트 지침 파일 생성
-lim init claude             # CLAUDE.md 생성
-lim init codex              # AGENTS.md 생성
-lim init gemini             # GEMINI.md 생성
-lim init claude --path AI_GUIDE.md  # 지정 파일에 생성
+zap init claude             # CLAUDE.md 생성
+zap init codex              # AGENTS.md 생성
+zap init gemini             # GEMINI.md 생성
+zap init claude --path AI_GUIDE.md  # 지정 파일에 생성
 ```
 
 ## 이슈 파일 형식

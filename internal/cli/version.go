@@ -6,14 +6,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Version = "0.1.0"
+// Version is set via ldflags at build time
+// Example: go build -ldflags "-X github.com/itda-work/zap/internal/cli.Version=v1.0.0"
+var Version = "dev"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number",
-	Long:  `Print the version number of lim.`,
+	Long:  `Print the version number of zap.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("lim version %s\n", Version)
+		fmt.Printf("zap version %s\n", Version)
 	},
 }
 

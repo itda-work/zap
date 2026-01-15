@@ -20,9 +20,9 @@ Supported agents:
   gemini    Create GEMINI.md for Google Gemini
 
 Examples:
-  lim init claude                       # Create CLAUDE.md in project root
-  lim init claude --path AI_GUIDE.md    # Create AI_GUIDE.md instead
-  lim init codex --path docs/AGENTS.md  # Create docs/AGENTS.md`,
+  zap init claude                       # Create CLAUDE.md in project root
+  zap init claude --path AI_GUIDE.md    # Create AI_GUIDE.md instead
+  zap init codex --path docs/AGENTS.md  # Create docs/AGENTS.md`,
 	Args:      cobra.ExactArgs(1),
 	ValidArgs: []string{"claude", "codex", "gemini"},
 	RunE:      runInit,
@@ -45,15 +45,15 @@ type agentConfig struct {
 var agentConfigs = map[string]agentConfig{
 	"claude": {
 		filename: "CLAUDE.md",
-		header:   "# Local Issue Management (lim) - Claude Instructions",
+		header:   "# Local Issue Management (zap) - Claude Instructions",
 	},
 	"codex": {
 		filename: "AGENTS.md",
-		header:   "# Local Issue Management (lim) - Codex Instructions",
+		header:   "# Local Issue Management (zap) - Codex Instructions",
 	},
 	"gemini": {
 		filename: "GEMINI.md",
-		header:   "# Local Issue Management (lim) - Gemini Instructions",
+		header:   "# Local Issue Management (zap) - Gemini Instructions",
 	},
 }
 
@@ -100,7 +100,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to append to file: %w", err)
 		}
 
-		fmt.Printf("✅ Appended lim instructions to %s\n", targetFile)
+		fmt.Printf("✅ Appended zap instructions to %s\n", targetFile)
 	} else {
 		// Create new file
 		if err := os.WriteFile(targetFile, []byte(content), 0644); err != nil {
@@ -154,67 +154,51 @@ updated_at: 2026-01-15T00:00:00Z
 
 파일명 규칙: ` + "`NNN-slug.md`" + ` (예: ` + "`001-feat-user-auth.md`" + `)
 
-## lim CLI 명령어
+## zap CLI 명령어
 
 ### 목록 조회
 
 ` + "```" + `bash
-lim list                    # 열린 이슈 (open + in-progress)
-lim list --all              # 전체 이슈
-lim list --state open       # 특정 상태만
-lim list --label bug        # 레이블 필터
-lim list --assignee user    # 담당자 필터
+zap list                    # 열린 이슈 (open + in-progress)
+zap list --all              # 전체 이슈
+zap list --state open       # 특정 상태만
+zap list --label bug        # 레이블 필터
+zap list --assignee user    # 담당자 필터
 ` + "```" + `
 
 ### 상세 보기
 
 ` + "```" + `bash
-lim show 1                  # 이슈 #1 상세
-lim show 1 --raw            # 원본 마크다운 출력
+zap show 1                  # 이슈 #1 상세
+zap show 1 --raw            # 원본 마크다운 출력
 ` + "```" + `
 
 ### 상태 변경
 
 ` + "```" + `bash
-lim open 1                  # → open/ (이슈 재오픈)
-lim start 1                 # → in-progress/ (작업 시작)
-lim done 1                  # → done/ (작업 완료)
+zap open 1                  # → open/ (이슈 재오픈)
+zap start 1                 # → in-progress/ (작업 시작)
+zap done 1                  # → done/ (작업 완료)
 ` + "```" + `
 
 ### 검색
 
 ` + "```" + `bash
-lim search "키워드"          # 제목/내용 검색
-lim search --title "키워드"  # 제목만 검색
+zap search "키워드"          # 제목/내용 검색
+zap search --title "키워드"  # 제목만 검색
 ` + "```" + `
 
 ### 통계
 
 ` + "```" + `bash
-lim stats                   # 상태별 이슈 수, 최근 활동
+zap stats                   # 상태별 이슈 수, 최근 활동
 ` + "```" + `
-
-### TUI 모드
-
-` + "```" + `bash
-lim                         # TUI 모드 진입
-lim tui                     # TUI 모드 진입 (명시적)
-` + "```" + `
-
-TUI 단축키:
-- ` + "`j/k`" + ` 또는 ` + "`↑/↓`" + `: 이동
-- ` + "`Enter`" + `: 상세 보기
-- ` + "`1/2/3`" + `: 상태별 필터 (open/in-progress/done)
-- ` + "`0`" + `: 전체 보기
-- ` + "`r`" + `: 새로고침
-- ` + "`/`" + `: 검색
-- ` + "`q`" + `: 종료
 
 ## 워크플로우
 
 1. **새 이슈 생성**: ` + "`.issues/open/NNN-slug.md`" + ` 파일을 직접 생성
-2. **작업 시작**: ` + "`lim start <number>`" + ` 실행
-3. **작업 완료**: ` + "`lim done <number>`" + ` 실행
+2. **작업 시작**: ` + "`zap start <number>`" + ` 실행
+3. **작업 완료**: ` + "`zap done <number>`" + ` 실행
 
 ## 주의사항
 

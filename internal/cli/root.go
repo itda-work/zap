@@ -5,13 +5,13 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "lim",
+	Use:     "zap",
 	Short:   "Local Issue Manager - CLI tool for managing local issues",
 	Version: Version,
-	Long: `lim (Local Issue Manager) is a CLI tool for managing issues
+	Long: `zap (Local Issue Manager) is a CLI tool for managing issues
 stored in the .issues/ directory of your project.
 
-Use 'lim list' to see issues or 'lim --help' for all commands.`,
+Use 'zap list' to see issues or 'zap --help' for all commands.`,
 }
 
 // Execute runs the root command

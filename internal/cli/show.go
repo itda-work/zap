@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/allieus/lim/internal/issue"
+	"github.com/itda-work/zap/internal/issue"
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 )

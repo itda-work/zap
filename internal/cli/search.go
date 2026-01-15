@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/allieus/lim/internal/issue"
+	"github.com/itda-work/zap/internal/issue"
 	"github.com/spf13/cobra"
 )
 

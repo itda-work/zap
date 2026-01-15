@@ -1,4 +1,4 @@
-module github.com/allieus/lim
+module github.com/itda-work/zap
 
 go 1.25.5
 
