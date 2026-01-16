@@ -1,14 +1,13 @@
 ---
 number: 2
-title: "feat: Markdown syntax highlighting 지원"
-state: open
+title: 'feat: Markdown syntax highlighting 지원'
+state: done
 labels:
-  - enhancement
-  - tui
-assignees:
+    - enhancement
+    - tui
+assignees: []
 created_at: 2026-01-15T00:00:00Z
 updated_at: 2026-01-15T00:00:00Z
-closed_at:
 ---
 
 ## 개요

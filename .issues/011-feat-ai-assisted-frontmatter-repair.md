@@ -1,14 +1,14 @@
 ---
 number: 11
-title: "feat: AI CLI를 활용한 frontmatter 자동 복구"
-state: open
+title: 'feat: AI CLI를 활용한 frontmatter 자동 복구'
+state: done
 labels:
-  - feature
-  - ai
-  - cli
+    - feature
+    - ai
+    - cli
 assignees: []
-created_at: 2026-01-16
-updated_at: 2026-01-16
+created_at: 2026-01-16T00:00:00Z
+updated_at: 2026-01-16T00:00:00Z
 ---
 
 ## 설명

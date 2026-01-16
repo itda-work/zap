@@ -1,14 +1,13 @@
 ---
 number: 16
-title: "feat: zap list에 날짜 필터링 옵션 추가"
-state: in-progress
+title: 'feat: zap list에 날짜 필터링 옵션 추가'
+state: done
 labels:
-  - enhancement
-  - cli
+    - enhancement
+    - cli
 assignees: []
 created_at: 2026-01-16T00:00:00Z
 updated_at: 2026-01-16T00:00:00Z
-closed_at:
 ---
 
 ## 개요

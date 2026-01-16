@@ -1,13 +1,13 @@
 ---
 number: 9
-title: "fix: zap list가 파싱 실패한 이슈를 조용히 무시함"
-state: open
+title: 'fix: zap list가 파싱 실패한 이슈를 조용히 무시함'
+state: done
 labels:
-  - bug
-  - cli
+    - bug
+    - cli
 assignees: []
-created_at: 2026-01-16
-updated_at: 2026-01-16
+created_at: 2026-01-16T00:00:00Z
+updated_at: 2026-01-16T00:00:00Z
 ---
 
 ## 문제

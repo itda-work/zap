@@ -1,15 +1,14 @@
 ---
 number: 7
-title: "feat: 이슈 상태 색상 표시"
-state: in-progress
+title: 'feat: 이슈 상태 색상 표시'
+state: done
 labels:
-  - enhancement
-  - cli
+    - enhancement
+    - cli
 assignees:
-  - allieus
+    - allieus
 created_at: 2026-01-16T00:00:00Z
 updated_at: 2026-01-16T00:00:00Z
-closed_at:
 ---
 
 ## 개요

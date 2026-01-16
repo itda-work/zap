@@ -1,13 +1,13 @@
 ---
 number: 10
-title: "feat: -C 옵션으로 프로젝트 디렉토리 지정"
-state: open
+title: 'feat: -C 옵션으로 프로젝트 디렉토리 지정'
+state: done
 labels:
-  - feature
-  - cli
+    - feature
+    - cli
 assignees: []
-created_at: 2026-01-16
-updated_at: 2026-01-16
+created_at: 2026-01-16T00:00:00Z
+updated_at: 2026-01-16T00:00:00Z
 ---
 
 ## 설명

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 // ParseFailure represents a file that failed to parse.
@@ -69,6 +70,7 @@ func (s *Store) GetFailureByNumber(number int) *ParseFailure {
 
 // List returns all issues, optionally filtered by state.
 // Call Warnings() after List() to get any parse failures.
+// Supports both flat structure (.issues/*.md) and legacy structure (.issues/{state}/*.md).
 func (s *Store) List(states ...State) ([]*Issue, error) {
 	if len(states) == 0 {
 		states = AllStates()
@@ -77,6 +79,35 @@ func (s *Store) List(states ...State) ([]*Issue, error) {
 	// Reset warnings for this operation
 	s.warnings = nil
 
+	// Create state filter map
+	stateFilter := make(map[State]bool)
+	for _, state := range states {
+		stateFilter[state] = true
+	}
+
+	// Try flat structure first
+	flatIssues, flatFailures, flatErr := s.loadFromFlatDir()
+
+	// Check if we have any flat structure issues
+	if flatErr == nil && len(flatIssues) > 0 {
+		// Filter by state
+		var filtered []*Issue
+		for _, issue := range flatIssues {
+			if stateFilter[issue.State] {
+				filtered = append(filtered, issue)
+			}
+		}
+		s.warnings = flatFailures
+
+		// Sort by number
+		sort.Slice(filtered, func(i, j int) bool {
+			return filtered[i].Number < filtered[j].Number
+		})
+
+		return filtered, nil
+	}
+
+	// Fallback to legacy structure
 	var issues []*Issue
 
 	for _, state := range states {
@@ -101,7 +132,8 @@ func (s *Store) List(states ...State) ([]*Issue, error) {
 	return issues, nil
 }
 
-// loadFromDir loads all issues from a directory, returning both successful parses and failures.
+// loadFromDir loads all issues from a legacy directory, returning both successful parses and failures.
+// This is used for backward compatibility with directory-based state management.
 func (s *Store) loadFromDir(dir string, state State) ([]*Issue, []ParseFailure, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -129,8 +161,44 @@ func (s *Store) loadFromDir(dir string, state State) ([]*Issue, []ParseFailure, 
 			continue
 		}
 
-		// 디렉토리 기반 상태로 덮어씀
+		// 디렉토리 기반 상태로 덮어씀 (legacy behavior)
 		issue.State = state
+		issues = append(issues, issue)
+	}
+
+	return issues, failures, nil
+}
+
+// loadFromFlatDir loads all issues from the flat directory structure.
+// State is determined from frontmatter, not directory location.
+func (s *Store) loadFromFlatDir() ([]*Issue, []ParseFailure, error) {
+	entries, err := os.ReadDir(s.baseDir)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var issues []*Issue
+	var failures []ParseFailure
+
+	for _, entry := range entries {
+		// Skip directories and non-markdown files
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
+			continue
+		}
+
+		filePath := filepath.Join(s.baseDir, entry.Name())
+		issue, err := Parse(filePath)
+		if err != nil {
+			failures = append(failures, ParseFailure{
+				FilePath: filePath,
+				FileName: entry.Name(),
+				Error:    err.Error(),
+				State:    "", // Unknown state for flat files
+			})
+			continue
+		}
+
+		// State comes from frontmatter (already parsed, no override)
 		issues = append(issues, issue)
 	}
 
@@ -153,7 +221,9 @@ func (s *Store) Get(number int) (*Issue, error) {
 	return nil, fmt.Errorf("issue #%d not found", number)
 }
 
-// Move changes the state of an issue by moving it to a different directory
+// Move changes the state of an issue.
+// For flat structure: updates frontmatter state.
+// For legacy structure: moves file to new directory.
 func (s *Store) Move(number int, newState State) error {
 	issue, err := s.Get(number)
 	if err != nil {
@@ -164,7 +234,13 @@ func (s *Store) Move(number int, newState State) error {
 		return nil // 이미 같은 상태
 	}
 
-	// 새 경로 계산
+	// Check if using flat structure (file is directly in baseDir)
+	if filepath.Dir(issue.FilePath) == s.baseDir {
+		// Flat structure: update frontmatter
+		return s.UpdateState(issue, newState)
+	}
+
+	// Legacy structure: move file to new directory
 	fileName := filepath.Base(issue.FilePath)
 	newDir := filepath.Join(s.baseDir, StateDir(newState))
 	newPath := filepath.Join(newDir, fileName)
@@ -177,6 +253,38 @@ func (s *Store) Move(number int, newState State) error {
 	// 파일 이동
 	if err := os.Rename(issue.FilePath, newPath); err != nil {
 		return fmt.Errorf("failed to move issue: %w", err)
+	}
+
+	return nil
+}
+
+// UpdateState changes the state of an issue by updating its frontmatter.
+// This is used for flat structure where files don't move between directories.
+func (s *Store) UpdateState(issue *Issue, newState State) error {
+	if issue.State == newState {
+		return nil
+	}
+
+	// Update state and timestamps
+	issue.State = newState
+	issue.UpdatedAt = time.Now()
+
+	// Handle closed_at timestamp
+	if newState == StateDone || newState == StateClosed {
+		now := time.Now()
+		issue.ClosedAt = &now
+	} else {
+		issue.ClosedAt = nil
+	}
+
+	// Serialize and write back
+	data, err := Serialize(issue)
+	if err != nil {
+		return fmt.Errorf("failed to serialize issue: %w", err)
+	}
+
+	if err := os.WriteFile(issue.FilePath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write issue file: %w", err)
 	}
 
 	return nil

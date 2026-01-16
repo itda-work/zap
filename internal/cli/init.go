@@ -144,13 +144,13 @@ zap show 10
 
 ` + "```" + `
 .issues/
-├── open/           # 대기 중
-├── in-progress/    # 진행 중
-├── done/           # 완료
-└── closed/         # 취소/보류
+├── 001-feat-some-feature.md     # state: open
+├── 002-fix-some-bug.md          # state: in-progress
+├── 003-feat-completed.md        # state: done
+└── 004-cancelled-task.md        # state: closed
 ` + "```" + `
 
-이슈 파일은 해당 상태의 디렉토리에 위치하며, 상태 변경 시 파일이 다른 디렉토리로 이동됩니다.
+이슈 상태는 파일의 YAML frontmatter에 있는 ` + "`state`" + ` 필드로 결정됩니다.
 
 ## 이슈 파일 형식
 
@@ -160,7 +160,7 @@ zap show 10
 ---
 number: 1
 title: "이슈 제목"
-state: open
+state: open                     # 상태: open, in-progress, done, closed
 labels:
   - bug
   - urgent
@@ -198,18 +198,20 @@ zap show 1 --raw            # 원본 마크다운 출력
 
 ### 상태 변경
 
+상태 변경 시 파일의 frontmatter가 업데이트됩니다 (파일 위치 변경 없음):
+
 ` + "```" + `bash
-zap open 1                  # → open/ (이슈 재오픈)
-zap start 1                 # → in-progress/ (작업 시작)
-zap done 1                  # → done/ (작업 완료)
-zap close 1                 # → closed/ (취소/보류)
+zap open 1                  # state: open (이슈 재오픈)
+zap start 1                 # state: in-progress (작업 시작)
+zap done 1                  # state: done (작업 완료)
+zap close 1                 # state: closed (취소/보류)
 ` + "```" + `
 
 ### 검색
 
 ` + "```" + `bash
-zap search "키워드"          # 제목/내용 검색
-zap search --title "키워드"  # 제목만 검색
+zap list --search "키워드"   # 제목/내용 검색
+zap list --title-only       # 제목만 검색
 ` + "```" + `
 
 ### 통계
@@ -218,9 +220,18 @@ zap search --title "키워드"  # 제목만 검색
 zap stats                   # 상태별 이슈 수, 최근 활동
 ` + "```" + `
 
+### 마이그레이션
+
+기존 디렉토리 기반 구조를 사용 중이라면:
+
+` + "```" + `bash
+zap migrate                 # 평면 구조로 마이그레이션
+zap migrate --dry-run       # 변경 사항 미리보기
+` + "```" + `
+
 ## 워크플로우
 
-1. **새 이슈 생성**: ` + "`.issues/open/NNN-slug.md`" + ` 파일을 직접 생성
+1. **새 이슈 생성**: ` + "`.issues/NNN-slug.md`" + ` 파일을 직접 생성 (state: open)
 2. **작업 시작**: ` + "`zap start <number>`" + ` 실행
 3. **작업 완료**: ` + "`zap done <number>`" + ` 실행
 4. **취소/보류**: ` + "`zap close <number>`" + ` 실행
@@ -229,6 +240,6 @@ zap stats                   # 상태별 이슈 수, 최근 활동
 
 - 이슈 번호는 고유해야 합니다
 - 파일명의 번호와 frontmatter의 number가 일치해야 합니다
-- 상태 변경 시 파일이 자동으로 해당 디렉토리로 이동됩니다
+- 상태 변경 시 frontmatter의 state 필드가 업데이트됩니다
 `
 }

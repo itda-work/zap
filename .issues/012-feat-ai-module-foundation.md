@@ -1,14 +1,14 @@
 ---
 number: 12
-title: "feat: 재사용 가능한 AI 모듈 설계"
-state: open
+title: 'feat: 재사용 가능한 AI 모듈 설계'
+state: done
 labels:
-  - feature
-  - ai
-  - architecture
+    - feature
+    - ai
+    - architecture
 assignees: []
-created_at: 2026-01-16
-updated_at: 2026-01-16
+created_at: 2026-01-16T00:00:00Z
+updated_at: 2026-01-16T00:00:00Z
 ---
 
 ## 설명

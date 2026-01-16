@@ -1,16 +1,15 @@
 ---
 number: 1
-title: "feat: lim - Local Issue Manager CLI/TUI 도구 개발"
-state: open
+title: 'feat: lim - Local Issue Manager CLI/TUI 도구 개발'
+state: done
 labels:
-  - feature
-  - cli
-  - tui
+    - feature
+    - cli
+    - tui
 assignees:
-  - allieus
+    - allieus
 created_at: 2026-01-15T00:00:00Z
 updated_at: 2026-01-15T00:00:00Z
-closed_at:
 ---
 
 ## 개요
