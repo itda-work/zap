@@ -15,8 +15,20 @@ var statsCmd = &cobra.Command{
 	RunE:  runStats,
 }
 
+var statsDateFilter DateFilter
+
 func init() {
 	rootCmd.AddCommand(statsCmd)
+
+	// Date filter options
+	statsCmd.Flags().BoolVar(&statsDateFilter.Today, "today", false, "Show statistics for issues created/updated today")
+	statsCmd.Flags().StringVar(&statsDateFilter.Since, "since", "", "Show statistics since date (YYYY-MM-DD)")
+	statsCmd.Flags().StringVar(&statsDateFilter.Until, "until", "", "Show statistics until date (YYYY-MM-DD)")
+	statsCmd.Flags().StringVar(&statsDateFilter.Year, "year", "", "Show statistics for year (YYYY)")
+	statsCmd.Flags().StringVar(&statsDateFilter.Month, "month", "", "Show statistics for month (YYYY-MM)")
+	statsCmd.Flags().StringVar(&statsDateFilter.Date, "date", "", "Show statistics for specific date (YYYY-MM-DD)")
+	statsCmd.Flags().IntVar(&statsDateFilter.Days, "days", 0, "Show statistics for last N days")
+	statsCmd.Flags().IntVar(&statsDateFilter.Weeks, "weeks", 0, "Show statistics for last N weeks")
 }
 
 func runStats(cmd *cobra.Command, args []string) error {
@@ -26,18 +38,92 @@ func runStats(cmd *cobra.Command, args []string) error {
 	}
 	store := issue.NewStore(dir)
 
-	stats, err := store.Stats()
+	// Get all issues first
+	issues, err := store.List(issue.AllStates()...)
 	if err != nil {
-		return fmt.Errorf("failed to get stats: %w", err)
+		return fmt.Errorf("failed to list issues: %w", err)
 	}
 
-	printStats(stats)
+	// Apply date filter if specified
+	filterDescription := ""
+	if !statsDateFilter.IsEmpty() {
+		issues, err = FilterIssuesByDate(issues, &statsDateFilter)
+		if err != nil {
+			return err
+		}
+		filterDescription = getFilterDescription(&statsDateFilter)
+	}
+
+	// Calculate stats from filtered issues
+	stats := calculateStats(issues)
+
+	printStats(stats, filterDescription)
 	return nil
 }
 
-func printStats(stats *issue.Stats) {
+// calculateStats computes statistics from a list of issues
+func calculateStats(issues []*issue.Issue) *issue.Stats {
+	stats := &issue.Stats{
+		Total:      len(issues),
+		ByState:    make(map[issue.State]int),
+		ByLabel:    make(map[string]int),
+		ByAssignee: make(map[string]int),
+	}
+
+	for _, iss := range issues {
+		stats.ByState[iss.State]++
+
+		for _, label := range iss.Labels {
+			stats.ByLabel[label]++
+		}
+
+		for _, assignee := range iss.Assignees {
+			stats.ByAssignee[assignee]++
+		}
+	}
+
+	return stats
+}
+
+// getFilterDescription returns a human-readable description of the filter
+func getFilterDescription(filter *DateFilter) string {
+	if filter.Today {
+		return "today"
+	}
+	if filter.Days > 0 {
+		return fmt.Sprintf("last %d days", filter.Days)
+	}
+	if filter.Weeks > 0 {
+		return fmt.Sprintf("last %d weeks", filter.Weeks)
+	}
+	if filter.Date != "" {
+		return filter.Date
+	}
+	if filter.Month != "" {
+		return filter.Month
+	}
+	if filter.Year != "" {
+		return filter.Year
+	}
+	if filter.Since != "" && filter.Until != "" {
+		return fmt.Sprintf("%s ~ %s", filter.Since, filter.Until)
+	}
+	if filter.Since != "" {
+		return fmt.Sprintf("since %s", filter.Since)
+	}
+	if filter.Until != "" {
+		return fmt.Sprintf("until %s", filter.Until)
+	}
+	return ""
+}
+
+func printStats(stats *issue.Stats, filterDescription string) {
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println("                    Issue Statistics")
+	if filterDescription != "" {
+		fmt.Printf("            Issue Statistics (%s)\n", filterDescription)
+	} else {
+		fmt.Println("                    Issue Statistics")
+	}
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	fmt.Printf("\n📊 Total Issues: %d\n", stats.Total)

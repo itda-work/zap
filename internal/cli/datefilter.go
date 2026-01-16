@@ -15,11 +15,13 @@ type DateFilter struct {
 	Year  string
 	Month string
 	Date  string
+	Days  int
+	Weeks int
 }
 
 // IsEmpty returns true if no date filter is set
 func (f *DateFilter) IsEmpty() bool {
-	return !f.Today && f.Since == "" && f.Until == "" && f.Year == "" && f.Month == "" && f.Date == ""
+	return !f.Today && f.Since == "" && f.Until == "" && f.Year == "" && f.Month == "" && f.Date == "" && f.Days == 0 && f.Weeks == 0
 }
 
 // GetDateRange returns the start and end time based on filter options
@@ -34,6 +36,18 @@ func (f *DateFilter) GetDateRange() (start, end time.Time, err error) {
 	if f.Today {
 		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 		end = start.Add(24 * time.Hour)
+		return
+	}
+
+	if f.Days > 0 {
+		end = now
+		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -f.Days+1)
+		return
+	}
+
+	if f.Weeks > 0 {
+		end = now
+		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -f.Weeks*7+1)
 		return
 	}
 

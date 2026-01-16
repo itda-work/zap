@@ -45,6 +45,8 @@ func init() {
 	listCmd.Flags().StringVar(&listDateFilter.Year, "year", "", "Show issues from year (YYYY)")
 	listCmd.Flags().StringVar(&listDateFilter.Month, "month", "", "Show issues from month (YYYY-MM)")
 	listCmd.Flags().StringVar(&listDateFilter.Date, "date", "", "Show issues from specific date (YYYY-MM-DD)")
+	listCmd.Flags().IntVar(&listDateFilter.Days, "days", 0, "Show issues from last N days")
+	listCmd.Flags().IntVar(&listDateFilter.Weeks, "weeks", 0, "Show issues from last N weeks")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
