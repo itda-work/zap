@@ -46,20 +46,28 @@ func runSearch(cmd *cobra.Command, args []string) error {
 }
 
 func printSearchResults(issues []*issue.Issue, keyword string) {
-	stateSymbol := map[issue.State]string{
-		issue.StateOpen:       "○",
-		issue.StateInProgress: "◐",
-		issue.StateDone:       "●",
-		issue.StateClosed:     "✕",
+	// 상태별 색상/기호 (list.go와 동일)
+	stateStyle := map[issue.State]struct {
+		symbol string
+		color  string
+	}{
+		issue.StateOpen:       {"○", ""},
+		issue.StateInProgress: {"◐", colorYellow},
+		issue.StateDone:       {"●", colorGreen},
+		issue.StateClosed:     {"✕", colorGray},
 	}
 
 	for _, iss := range issues {
-		symbol := stateSymbol[iss.State]
+		style := stateStyle[iss.State]
 
 		// 제목에서 키워드 하이라이트 (대소문자 무시)
 		title := highlightKeyword(iss.Title, keyword)
 
-		fmt.Printf("%s #%-4d %s\n", symbol, iss.Number, title)
+		if style.color != "" {
+			fmt.Printf("%s%s%s #%-4d %s\n", style.color, style.symbol, colorReset, iss.Number, title)
+		} else {
+			fmt.Printf("%s #%-4d %s\n", style.symbol, iss.Number, title)
+		}
 	}
 }
 

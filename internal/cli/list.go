@@ -74,23 +74,38 @@ func runList(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// ANSI color codes
+const (
+	colorReset  = "\033[0m"
+	colorYellow = "\033[33m"
+	colorGreen  = "\033[32m"
+	colorGray   = "\033[90m"
+)
+
 func printIssueList(issues []*issue.Issue) {
 	// 상태별 색상/기호
-	stateSymbol := map[issue.State]string{
-		issue.StateOpen:       "○",
-		issue.StateInProgress: "◐",
-		issue.StateDone:       "●",
-		issue.StateClosed:     "✕",
+	stateStyle := map[issue.State]struct {
+		symbol string
+		color  string
+	}{
+		issue.StateOpen:       {"○", ""},
+		issue.StateInProgress: {"◐", colorYellow},
+		issue.StateDone:       {"●", colorGreen},
+		issue.StateClosed:     {"✕", colorGray},
 	}
 
 	for _, iss := range issues {
-		symbol := stateSymbol[iss.State]
+		style := stateStyle[iss.State]
 		labels := ""
 		if len(iss.Labels) > 0 {
 			labels = fmt.Sprintf(" [%s]", strings.Join(iss.Labels, ", "))
 		}
 
-		fmt.Printf("%s #%-4d %s%s\n", symbol, iss.Number, iss.Title, labels)
+		if style.color != "" {
+			fmt.Printf("%s%s%s #%-4d %s%s\n", style.color, style.symbol, colorReset, iss.Number, iss.Title, labels)
+		} else {
+			fmt.Printf("%s #%-4d %s%s\n", style.symbol, iss.Number, iss.Title, labels)
+		}
 	}
 
 	fmt.Printf("\nTotal: %d issues\n", len(issues))
