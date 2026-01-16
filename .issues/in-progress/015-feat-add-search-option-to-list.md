@@ -1,7 +1,7 @@
 ---
 number: 15
 title: "feat: zap list에 검색어 옵션 추가"
-state: open
+state: in-progress
 labels:
   - enhancement
   - cli
@@ -41,12 +41,25 @@ zap list --label bug --search "login" --assignee allieus
 
 ## 작업 목록
 
-- [ ] `--search`, `-S` 플래그 추가 (internal/cli/list.go)
-- [ ] 기존 필터들과 AND 조건으로 동작
-- [ ] `zap search` 명령 제거 (internal/cli/search.go 삭제)
+- [x] `--search`, `-S` 플래그 추가 (internal/cli/list.go)
+- [x] 기존 필터들과 AND 조건으로 동작
+- [x] `zap search` 명령 제거 (internal/cli/search.go 삭제)
+- [x] `highlightKeyword` 함수 list.go로 이동
+- [x] `--title-only` 옵션 추가
 - [ ] 테스트 추가
 
 ## 고려사항
 
 - 검색은 제목+본문 기본, `--title-only` 옵션으로 제목만 검색 지원
 - `highlightKeyword` 함수는 list.go로 이동
+
+## 구현 기록
+
+### 2026-01-16
+
+- `--search`, `-S` 플래그 추가
+- `--title-only` 플래그 추가 (제목만 검색)
+- `filterBySearch()` 함수 구현
+- `highlightKeyword()` 함수 search.go에서 list.go로 이동
+- `printIssueList()` 함수에 키워드 하이라이트 기능 추가
+- `internal/cli/search.go` 삭제
