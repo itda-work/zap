@@ -90,15 +90,15 @@ func runList(cmd *cobra.Command, args []string) error {
 }
 
 func printIssueList(issues []*issue.Issue, skippedCount int) {
-	// 상태별 색상/기호
+	// 상태별 텍스트 태그와 색상
 	stateStyle := map[issue.State]struct {
-		symbol string
-		color  string
+		tag   string
+		color string
 	}{
-		issue.StateOpen:       {"○", ""},
-		issue.StateInProgress: {"◐", colorYellow},
-		issue.StateDone:       {"●", colorGreen},
-		issue.StateClosed:     {"✕", colorGray},
+		issue.StateOpen:       {"[open]", ""},
+		issue.StateInProgress: {"[wip]", colorYellow},
+		issue.StateDone:       {"[done]", colorGreen},
+		issue.StateClosed:     {"[closed]", colorGray},
 	}
 
 	for _, iss := range issues {
@@ -108,8 +108,9 @@ func printIssueList(issues []*issue.Issue, skippedCount int) {
 			labels = fmt.Sprintf(" [%s]", strings.Join(iss.Labels, ", "))
 		}
 
-		line := fmt.Sprintf("%s #%-4d %s%s", style.symbol, iss.Number, iss.Title, labels)
-		fmt.Println(colorize(line, style.color))
+		// 태그를 색상 적용 후 출력, 나머지는 기본 색상
+		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+		fmt.Printf("%s #%-4d %s%s\n", tag, iss.Number, iss.Title, labels)
 	}
 
 	if skippedCount > 0 {
