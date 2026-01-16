@@ -1,7 +1,8 @@
 .PHONY: build install test clean fmt lint build-all release dist-clean
 
 BINARY := zap
-VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+# Use TAG if provided (for releases), otherwise use git describe
+VERSION := $(or $(TAG),$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev"))
 BUILD_DATE := $(shell date -u +%Y-%m-%d)
 LDFLAGS := -ldflags "-s -w -X github.com/itda-work/zap/internal/cli.Version=$(VERSION) -X github.com/itda-work/zap/internal/cli.BuildDate=$(BUILD_DATE)"
 DIST := dist

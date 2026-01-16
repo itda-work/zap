@@ -95,18 +95,26 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 
 	// Perform update
 	fmt.Println()
+	var lastStage string
 	err = u.Update(info.ReleaseInfo, func(stage string, pct int) {
-		if pct > 0 && pct < 100 {
-			fmt.Printf("\r%s... %d%%", stage, pct)
-		} else if pct == 100 {
-			fmt.Printf("\r%s... OK\n", stage)
-		} else {
+		if stage != lastStage {
+			// New stage: print stage name
+			if lastStage != "" {
+				fmt.Println("OK")
+			}
 			fmt.Printf("%s... ", stage)
+			lastStage = stage
 		}
+		// Only show percentage for download progress (optional: could add spinner)
 	})
+	if err == nil && lastStage != "" {
+		fmt.Println("OK")
+	}
 
 	if err != nil {
-		fmt.Println("FAILED")
+		if lastStage != "" {
+			fmt.Println("FAILED")
+		}
 		return handleUpdateError(err)
 	}
 
