@@ -8,9 +8,19 @@ import (
 	"strings"
 )
 
+// ParseFailure represents a file that failed to parse.
+type ParseFailure struct {
+	FilePath string // Full path to the file
+	FileName string // Just the filename
+	Error    string // Error message
+	State    State  // Which state directory it was in
+	Content  string // File content (loaded on demand)
+}
+
 // Store manages issues in a directory
 type Store struct {
-	baseDir string
+	baseDir  string
+	warnings []ParseFailure // Collected during List operations
 }
 
 // NewStore creates a new Store
@@ -18,17 +28,60 @@ func NewStore(baseDir string) *Store {
 	return &Store{baseDir: baseDir}
 }
 
-// List returns all issues, optionally filtered by state
+// Warnings returns parse failures from the last List operation.
+func (s *Store) Warnings() []ParseFailure {
+	return s.warnings
+}
+
+// WarningsWithContent returns parse failures with file content loaded.
+// This is useful for repair operations that need the original content.
+func (s *Store) WarningsWithContent() []ParseFailure {
+	result := make([]ParseFailure, len(s.warnings))
+	for i, w := range s.warnings {
+		result[i] = w
+		if content, err := os.ReadFile(w.FilePath); err == nil {
+			result[i].Content = string(content)
+		}
+	}
+	return result
+}
+
+// GetFailureByNumber finds a parse failure by extracting number from filename.
+// Returns nil if not found. The filename format is expected to be "NNN-title.md".
+func (s *Store) GetFailureByNumber(number int) *ParseFailure {
+	prefix := fmt.Sprintf("%d-", number)
+	prefixPadded := fmt.Sprintf("%03d-", number)
+
+	for _, w := range s.warnings {
+		if strings.HasPrefix(w.FileName, prefix) || strings.HasPrefix(w.FileName, prefixPadded) {
+			content, _ := os.ReadFile(w.FilePath)
+			return &ParseFailure{
+				FilePath: w.FilePath,
+				FileName: w.FileName,
+				Error:    w.Error,
+				State:    w.State,
+				Content:  string(content),
+			}
+		}
+	}
+	return nil
+}
+
+// List returns all issues, optionally filtered by state.
+// Call Warnings() after List() to get any parse failures.
 func (s *Store) List(states ...State) ([]*Issue, error) {
 	if len(states) == 0 {
 		states = AllStates()
 	}
 
+	// Reset warnings for this operation
+	s.warnings = nil
+
 	var issues []*Issue
 
 	for _, state := range states {
 		dir := filepath.Join(s.baseDir, StateDir(state))
-		stateIssues, err := s.loadFromDir(dir, state)
+		stateIssues, failures, err := s.loadFromDir(dir, state)
 		if err != nil {
 			// 디렉토리가 없으면 무시
 			if os.IsNotExist(err) {
@@ -37,6 +90,7 @@ func (s *Store) List(states ...State) ([]*Issue, error) {
 			return nil, err
 		}
 		issues = append(issues, stateIssues...)
+		s.warnings = append(s.warnings, failures...)
 	}
 
 	// 번호로 정렬
@@ -47,14 +101,16 @@ func (s *Store) List(states ...State) ([]*Issue, error) {
 	return issues, nil
 }
 
-// loadFromDir loads all issues from a directory
-func (s *Store) loadFromDir(dir string, state State) ([]*Issue, error) {
+// loadFromDir loads all issues from a directory, returning both successful parses and failures.
+func (s *Store) loadFromDir(dir string, state State) ([]*Issue, []ParseFailure, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var issues []*Issue
+	var failures []ParseFailure
+
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
 			continue
@@ -63,7 +119,13 @@ func (s *Store) loadFromDir(dir string, state State) ([]*Issue, error) {
 		filePath := filepath.Join(dir, entry.Name())
 		issue, err := Parse(filePath)
 		if err != nil {
-			// 파싱 실패한 파일은 건너뜀
+			// 파싱 실패 기록
+			failures = append(failures, ParseFailure{
+				FilePath: filePath,
+				FileName: entry.Name(),
+				Error:    err.Error(),
+				State:    state,
+			})
 			continue
 		}
 
@@ -72,7 +134,7 @@ func (s *Store) loadFromDir(dir string, state State) ([]*Issue, error) {
 		issues = append(issues, issue)
 	}
 
-	return issues, nil
+	return issues, failures, nil
 }
 
 // Get returns a single issue by number

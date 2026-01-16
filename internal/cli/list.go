@@ -21,6 +21,7 @@ var (
 	listState    string
 	listLabel    string
 	listAssignee string
+	listQuiet    bool
 )
 
 func init() {
@@ -30,6 +31,7 @@ func init() {
 	listCmd.Flags().StringVarP(&listState, "state", "s", "", "Filter by state (open, in-progress, done, closed)")
 	listCmd.Flags().StringVarP(&listLabel, "label", "l", "", "Filter by label")
 	listCmd.Flags().StringVar(&listAssignee, "assignee", "", "Filter by assignee")
+	listCmd.Flags().BoolVarP(&listQuiet, "quiet", "q", false, "Suppress parse failure warnings")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -65,12 +67,23 @@ func runList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to list issues: %w", err)
 	}
 
-	if len(issues) == 0 {
+	// Get warnings from store
+	warnings := store.Warnings()
+
+	if len(issues) == 0 && len(warnings) == 0 {
 		fmt.Println("No issues found.")
 		return nil
 	}
 
-	printIssueList(issues)
+	if len(issues) > 0 {
+		printIssueList(issues, len(warnings))
+	}
+
+	// Print warnings unless --quiet is set
+	if !listQuiet && len(warnings) > 0 {
+		printParseWarnings(warnings)
+	}
+
 	return nil
 }
 
@@ -80,9 +93,10 @@ const (
 	colorYellow = "\033[33m"
 	colorGreen  = "\033[32m"
 	colorGray   = "\033[90m"
+	colorRed    = "\033[31m"
 )
 
-func printIssueList(issues []*issue.Issue) {
+func printIssueList(issues []*issue.Issue, skippedCount int) {
 	// 상태별 색상/기호
 	stateStyle := map[issue.State]struct {
 		symbol string
@@ -108,5 +122,27 @@ func printIssueList(issues []*issue.Issue) {
 		}
 	}
 
-	fmt.Printf("\nTotal: %d issues\n", len(issues))
+	if skippedCount > 0 {
+		fmt.Printf("\nTotal: %d issues (%d skipped)\n", len(issues), skippedCount)
+	} else {
+		fmt.Printf("\nTotal: %d issues\n", len(issues))
+	}
+}
+
+func printParseWarnings(warnings []issue.ParseFailure) {
+	fmt.Printf("\n%s⚠️  Parse failures (%d files):%s\n", colorYellow, len(warnings), colorReset)
+	for _, w := range warnings {
+		// Truncate filename if too long
+		name := w.FileName
+		if len(name) > 50 {
+			name = name[:47] + "..."
+		}
+		// Truncate error message
+		errMsg := w.Error
+		if len(errMsg) > 60 {
+			errMsg = errMsg[:57] + "..."
+		}
+		fmt.Printf("  %s- %s%s: %s\n", colorGray, name, colorReset, errMsg)
+	}
+	fmt.Printf("\n%sRun 'zap repair --all' to fix with AI (requires claude/codex/gemini CLI)%s\n", colorGray, colorReset)
 }
