@@ -246,10 +246,10 @@ func printDiff(old, new string) {
 
 		if oldLine != newLine {
 			if oldLine != "" {
-				fmt.Printf("     %s- %s%s\n", colorRed, oldLine, colorReset)
+				fmt.Printf("     %s\n", colorize("- "+oldLine, colorRed))
 			}
 			if newLine != "" {
-				fmt.Printf("     %s+ %s%s\n", colorGreen, newLine, colorReset)
+				fmt.Printf("     %s\n", colorize("+ "+newLine, colorGreen))
 			}
 		}
 	}

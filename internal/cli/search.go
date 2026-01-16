@@ -63,15 +63,17 @@ func printSearchResults(issues []*issue.Issue, keyword string) {
 		// 제목에서 키워드 하이라이트 (대소문자 무시)
 		title := highlightKeyword(iss.Title, keyword)
 
-		if style.color != "" {
-			fmt.Printf("%s%s%s #%-4d %s\n", style.color, style.symbol, colorReset, iss.Number, title)
-		} else {
-			fmt.Printf("%s #%-4d %s\n", style.symbol, iss.Number, title)
-		}
+		line := fmt.Sprintf("%s #%-4d %s", style.symbol, iss.Number, title)
+		fmt.Println(colorize(line, style.color))
 	}
 }
 
 func highlightKeyword(text, keyword string) string {
+	// colorEnabled가 false면 하이라이트하지 않음
+	if !colorEnabled {
+		return text
+	}
+
 	// 간단한 하이라이트 (터미널 볼드)
 	lower := strings.ToLower(text)
 	lowerKeyword := strings.ToLower(keyword)
@@ -86,5 +88,5 @@ func highlightKeyword(text, keyword string) string {
 	match := text[idx : idx+len(keyword)]
 	after := text[idx+len(keyword):]
 
-	return before + "\033[1m" + match + "\033[0m" + after
+	return before + "\033[1m" + match + colorReset + after
 }

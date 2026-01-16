@@ -87,15 +87,6 @@ func runList(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// ANSI color codes
-const (
-	colorReset  = "\033[0m"
-	colorYellow = "\033[33m"
-	colorGreen  = "\033[32m"
-	colorGray   = "\033[90m"
-	colorRed    = "\033[31m"
-)
-
 func printIssueList(issues []*issue.Issue, skippedCount int) {
 	// 상태별 색상/기호
 	stateStyle := map[issue.State]struct {
@@ -115,11 +106,8 @@ func printIssueList(issues []*issue.Issue, skippedCount int) {
 			labels = fmt.Sprintf(" [%s]", strings.Join(iss.Labels, ", "))
 		}
 
-		if style.color != "" {
-			fmt.Printf("%s%s%s #%-4d %s%s\n", style.color, style.symbol, colorReset, iss.Number, iss.Title, labels)
-		} else {
-			fmt.Printf("%s #%-4d %s%s\n", style.symbol, iss.Number, iss.Title, labels)
-		}
+		line := fmt.Sprintf("%s #%-4d %s%s", style.symbol, iss.Number, iss.Title, labels)
+		fmt.Println(colorize(line, style.color))
 	}
 
 	if skippedCount > 0 {
@@ -130,7 +118,7 @@ func printIssueList(issues []*issue.Issue, skippedCount int) {
 }
 
 func printParseWarnings(warnings []issue.ParseFailure) {
-	fmt.Printf("\n%s⚠️  Parse failures (%d files):%s\n", colorYellow, len(warnings), colorReset)
+	fmt.Println(colorize(fmt.Sprintf("\n⚠️  Parse failures (%d files):", len(warnings)), colorYellow))
 	for _, w := range warnings {
 		// Truncate filename if too long
 		name := w.FileName
@@ -142,7 +130,7 @@ func printParseWarnings(warnings []issue.ParseFailure) {
 		if len(errMsg) > 60 {
 			errMsg = errMsg[:57] + "..."
 		}
-		fmt.Printf("  %s- %s%s: %s\n", colorGray, name, colorReset, errMsg)
+		fmt.Printf("  %s: %s\n", colorize("- "+name, colorGray), errMsg)
 	}
-	fmt.Printf("\n%sRun 'zap repair --all' to fix with AI (requires claude/codex/gemini CLI)%s\n", colorGray, colorReset)
+	fmt.Println(colorize("\nRun 'zap repair --all' to fix with AI (requires claude/codex/gemini CLI)", colorGray))
 }
