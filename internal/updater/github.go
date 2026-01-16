@@ -2,6 +2,7 @@ package updater
 
 import (
 	"bufio"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,6 +17,17 @@ const (
 	apiBaseURL     = "https://api.github.com"
 	defaultTimeout = 30 * time.Second
 )
+
+// newHTTP1Client creates an HTTP client that forces HTTP/1.1.
+// This avoids HTTP/2 protocol errors with some CDNs.
+func newHTTP1Client(timeout time.Duration) *http.Client {
+	return &http.Client{
+		Timeout: timeout,
+		Transport: &http.Transport{
+			TLSNextProto: make(map[string]func(string, *tls.Conn) http.RoundTripper),
+		},
+	}
+}
 
 // ReleaseInfo holds information about a GitHub release.
 type ReleaseInfo struct {
@@ -135,7 +147,9 @@ func (c *GitHubClient) DownloadAsset(asset *Asset, destPath string, progress fun
 
 	req.Header.Set("User-Agent", "zap-updater")
 
-	resp, err := c.httpClient.Do(req)
+	// Use HTTP/1.1 client for downloads to avoid HTTP/2 protocol errors with CDNs
+	downloadClient := newHTTP1Client(defaultTimeout)
+	resp, err := downloadClient.Do(req)
 	if err != nil {
 		return &NetworkError{Err: err}
 	}
@@ -193,7 +207,9 @@ func (c *GitHubClient) GetChecksums(release *ReleaseInfo) (map[string]string, er
 
 	req.Header.Set("User-Agent", "zap-updater")
 
-	resp, err := c.httpClient.Do(req)
+	// Use HTTP/1.1 client for downloads to avoid HTTP/2 protocol errors with CDNs
+	downloadClient := newHTTP1Client(defaultTimeout)
+	resp, err := downloadClient.Do(req)
 	if err != nil {
 		return nil, &NetworkError{Err: err}
 	}
