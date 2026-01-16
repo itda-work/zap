@@ -51,4 +51,9 @@ build-all: dist-clean
 # Create GitHub release (requires gh CLI)
 release: build-all
 	@if [ -z "$(TAG)" ]; then echo "Usage: make release TAG=v0.2.0"; exit 1; fi
+	@if ! git rev-parse $(TAG) >/dev/null 2>&1; then \
+		echo "Creating git tag $(TAG)..."; \
+		git tag -a $(TAG) -m "Release $(TAG)"; \
+		git push origin $(TAG); \
+	fi
 	gh release create $(TAG) $(DIST)/* --title "$(TAG)" --generate-notes
