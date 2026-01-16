@@ -27,7 +27,10 @@ func init() {
 func runSearch(cmd *cobra.Command, args []string) error {
 	keyword := args[0]
 
-	dir, _ := cmd.Flags().GetString("dir")
+	dir, err := getIssuesDir(cmd)
+	if err != nil {
+		return err
+	}
 	store := issue.NewStore(dir)
 
 	issues, err := store.Search(keyword, searchTitleOnly)

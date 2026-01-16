@@ -65,14 +65,24 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unsupported agent: %s (supported: claude, codex, gemini)", agent)
 	}
 
+	// Get project directory from -C flag
+	projectDir, err := getProjectDir(cmd)
+	if err != nil {
+		return err
+	}
+
 	// Determine target file path
 	var targetFile string
 	if initPath != "" {
-		// Use provided file path directly
-		targetFile = initPath
+		// Use provided file path
+		if filepath.IsAbs(initPath) {
+			targetFile = initPath
+		} else {
+			targetFile = filepath.Join(projectDir, initPath)
+		}
 	} else {
 		// Default to agent's default filename in project root
-		targetFile = config.filename
+		targetFile = filepath.Join(projectDir, config.filename)
 	}
 
 	// Generate instruction content
@@ -117,6 +127,18 @@ func generateInstructions(header string) string {
 	return header + `
 
 이 프로젝트는 로컬 이슈 관리 시스템(.issues/)을 사용합니다.
+
+## 중요: GitHub 이슈가 아닌 로컬 이슈 사용
+
+이슈 조회 시 ` + "`gh issue`" + ` 명령이 아닌 ` + "`zap`" + ` 명령을 사용하세요:
+
+` + "```" + `bash
+# ❌ 잘못된 방법
+gh issue view 10
+
+# ✅ 올바른 방법
+zap show 10
+` + "```" + `
 
 ## .issues/ 디렉토리 구조
 

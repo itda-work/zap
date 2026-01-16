@@ -50,7 +50,10 @@ func makeMoveFunc(targetState issue.State) func(*cobra.Command, []string) error 
 			return fmt.Errorf("invalid issue number: %s", args[0])
 		}
 
-		dir, _ := cmd.Flags().GetString("dir")
+		dir, err := getIssuesDir(cmd)
+		if err != nil {
+			return err
+		}
 		store := issue.NewStore(dir)
 
 		// 먼저 이슈 정보 가져오기

@@ -35,7 +35,10 @@ func init() {
 }
 
 func runList(cmd *cobra.Command, args []string) error {
-	dir, _ := cmd.Flags().GetString("dir")
+	dir, err := getIssuesDir(cmd)
+	if err != nil {
+		return err
+	}
 	store := issue.NewStore(dir)
 
 	var states []issue.State
@@ -53,7 +56,6 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	var issues []*issue.Issue
-	var err error
 
 	if listLabel != "" {
 		issues, err = store.FilterByLabel(listLabel, states...)

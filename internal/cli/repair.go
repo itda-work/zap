@@ -42,7 +42,10 @@ func init() {
 }
 
 func runRepair(cmd *cobra.Command, args []string) error {
-	dir, _ := cmd.Flags().GetString("dir")
+	dir, err := getIssuesDir(cmd)
+	if err != nil {
+		return err
+	}
 	store := issue.NewStore(dir)
 
 	// Load issues to populate warnings

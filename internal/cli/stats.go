@@ -20,7 +20,10 @@ func init() {
 }
 
 func runStats(cmd *cobra.Command, args []string) error {
-	dir, _ := cmd.Flags().GetString("dir")
+	dir, err := getIssuesDir(cmd)
+	if err != nil {
+		return err
+	}
 	store := issue.NewStore(dir)
 
 	stats, err := store.Stats()

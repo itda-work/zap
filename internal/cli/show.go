@@ -32,7 +32,10 @@ func runShow(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid issue number: %s", args[0])
 	}
 
-	dir, _ := cmd.Flags().GetString("dir")
+	dir, err := getIssuesDir(cmd)
+	if err != nil {
+		return err
+	}
 	store := issue.NewStore(dir)
 
 	iss, err := store.Get(number)

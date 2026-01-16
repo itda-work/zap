@@ -73,13 +73,25 @@ git의 `-C` 옵션과 동일하게 동작:
 
 ## 완료 기준
 
-- [ ] `-C` / `--project` 플래그 추가
-- [ ] 모든 서브커맨드에서 동작 확인
-- [ ] 상대/절대 경로 지원
-- [ ] `~` (홈 디렉토리) 확장
-- [ ] 존재하지 않는 경로 에러 처리
-- [ ] help 메시지 업데이트
-- [ ] README 문서 업데이트
+- [x] `-C` / `--project` 플래그 추가
+- [x] 모든 서브커맨드에서 동작 확인
+- [x] 상대/절대 경로 지원
+- [x] `~` (홈 디렉토리) 확장
+- [x] 존재하지 않는 경로 에러 처리
+- [x] help 메시지 업데이트
+- [x] README 문서 업데이트
+
+## 진행 내역
+
+### 2026-01-16
+
+구현 완료:
+
+- `root.go`: `-C/--project` PersistentFlag 추가 (StringArrayP로 여러 번 사용 가능)
+- `root.go`: `expandTilde()`, `getProjectDir()`, `getIssuesDir()` 헬퍼 함수 추가
+- 모든 서브커맨드 수정: list, show, move(open/start/done/close), search, stats, repair, init
+- `init.go`: AI 에이전트 지침에 "GitHub 이슈가 아닌 로컬 이슈 사용" 안내 추가
+- `README.md`: `-C` 옵션 사용법 문서화
 
 ## 참고
 

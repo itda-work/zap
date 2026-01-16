@@ -55,6 +55,11 @@ zap close 1                 # → closed/ (취소/보류)
 zap search "키워드"          # 제목/내용 검색
 zap stats                   # 통계 대시보드
 
+# 다른 프로젝트 이슈 관리 (-C 옵션)
+zap -C ~/other-project list         # 다른 프로젝트 이슈 목록
+zap -C ~/other-project show 5       # 다른 프로젝트 이슈 상세
+zap -C ~/other-project start 5      # 다른 프로젝트 이슈 상태 변경
+
 # AI 에이전트 지침 파일 생성
 zap init claude             # CLAUDE.md 생성
 zap init codex              # AGENTS.md 생성
