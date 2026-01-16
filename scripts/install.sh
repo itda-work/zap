@@ -14,7 +14,7 @@ set -euo pipefail
 
 REPO="itda-work/zap"
 BINARY_NAME="zap"
-DEFAULT_INSTALL_DIR="/usr/local/bin"
+DEFAULT_INSTALL_DIR="$HOME/.local/bin"
 TMP_FILE=""
 
 # Colors for output
