@@ -21,6 +21,7 @@ const (
 var (
 	updateCheck   bool
 	updateForce   bool
+	updateYes     bool
 	updateVersion string
 	updateScript  bool
 )
@@ -33,7 +34,8 @@ var updateCmd = &cobra.Command{
 Examples:
   zap update              # Check and update interactively
   zap update --check      # Check for updates only
-  zap update --force      # Update without confirmation
+  zap update -y           # Update without confirmation
+  zap update --force      # Update without confirmation (same as -y)
   zap update -v v0.3.0    # Update to a specific version
   zap update --script     # Update using OS install script (curl/PowerShell)`,
 	RunE: runUpdate,
@@ -44,6 +46,7 @@ func init() {
 
 	updateCmd.Flags().BoolVarP(&updateCheck, "check", "c", false, "Check for updates only, do not install")
 	updateCmd.Flags().BoolVarP(&updateForce, "force", "f", false, "Update without confirmation")
+	updateCmd.Flags().BoolVarP(&updateYes, "yes", "y", false, "Update without confirmation (alias for --force)")
 	updateCmd.Flags().StringVarP(&updateVersion, "version", "v", "", "Update to a specific version")
 	updateCmd.Flags().BoolVar(&updateScript, "script", false, "Update using OS-specific install script (curl/PowerShell)")
 }
@@ -101,7 +104,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Confirm update
-	if !updateForce {
+	if !updateForce && !updateYes {
 		if !confirmUpdate(info.CurrentVersion, info.LatestVersion) {
 			fmt.Println("Update cancelled.")
 			return nil
