@@ -5,16 +5,24 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/itda-work/zap/internal/updater"
 	"github.com/spf13/cobra"
 )
 
+const (
+	installScriptUnix    = "https://raw.githubusercontent.com/itda-work/zap/main/scripts/install.sh"
+	installScriptWindows = "https://raw.githubusercontent.com/itda-work/zap/main/scripts/install.ps1"
+)
+
 var (
 	updateCheck   bool
 	updateForce   bool
 	updateVersion string
+	updateScript  bool
 )
 
 var updateCmd = &cobra.Command{
@@ -26,7 +34,8 @@ Examples:
   zap update              # Check and update interactively
   zap update --check      # Check for updates only
   zap update --force      # Update without confirmation
-  zap update -v v0.3.0    # Update to a specific version`,
+  zap update -v v0.3.0    # Update to a specific version
+  zap update --script     # Update using OS install script (curl/PowerShell)`,
 	RunE: runUpdate,
 }
 
@@ -36,9 +45,15 @@ func init() {
 	updateCmd.Flags().BoolVarP(&updateCheck, "check", "c", false, "Check for updates only, do not install")
 	updateCmd.Flags().BoolVarP(&updateForce, "force", "f", false, "Update without confirmation")
 	updateCmd.Flags().StringVarP(&updateVersion, "version", "v", "", "Update to a specific version")
+	updateCmd.Flags().BoolVar(&updateScript, "script", false, "Update using OS-specific install script (curl/PowerShell)")
 }
 
 func runUpdate(cmd *cobra.Command, args []string) error {
+	// Use install script if --script flag is set
+	if updateScript {
+		return runScriptUpdate()
+	}
+
 	// Check if running a dev build
 	if updater.IsDevVersion(Version) {
 		return handleDevBuild()
@@ -130,18 +145,15 @@ func handleDevBuild() error {
 	fmt.Println("If you installed via 'go install', use:")
 	fmt.Println("  go install github.com/itda-work/zap/cmd/zap@latest")
 	fmt.Println()
-	fmt.Println("Otherwise, download the latest release:")
-	fmt.Println("  https://github.com/itda-work/zap/releases/latest")
+	fmt.Println("Or use the install script:")
+	fmt.Println("  zap update --script")
 	return nil
 }
 
 func handlePermissionError(reason, execPath string) error {
 	fmt.Printf("Error: %s\n\n", reason)
-	fmt.Println("The binary is installed in a system directory. Try:")
-	fmt.Println("  sudo zap update")
-	fmt.Println()
-	fmt.Println("Or reinstall to a user directory:")
-	fmt.Println("  ZAP_INSTALL_DIR=~/.local/bin curl -fsSL https://raw.githubusercontent.com/itda-work/zap/main/scripts/install.sh | bash")
+	fmt.Println("Use the install script to reinstall:")
+	fmt.Println("  zap update --script")
 	return fmt.Errorf("permission denied")
 }
 
@@ -155,15 +167,18 @@ func handleUpdateError(err error) error {
 	switch {
 	case errors.As(err, &netErr):
 		fmt.Println("Failed to connect to GitHub. Check your internet connection.")
+		printScriptHint()
 		return err
 	case errors.As(err, &notFoundErr):
 		fmt.Println("Release not found. Check the version number.")
 		return err
 	case errors.As(err, &rateLimitErr):
-		fmt.Printf("GitHub API rate limit exceeded. Try again later or set GITHUB_TOKEN.\n")
+		fmt.Println("GitHub API rate limit exceeded. Try again later or set GITHUB_TOKEN.")
+		printScriptHint()
 		return err
 	case errors.As(err, &checksumErr):
 		fmt.Println("Checksum verification failed. Download may be corrupted.")
+		printScriptHint()
 		return err
 	case errors.As(err, &noAssetErr):
 		fmt.Printf("No binary available for your platform (%s).\n", err.Error())
@@ -171,8 +186,15 @@ func handleUpdateError(err error) error {
 		fmt.Println("  go install github.com/itda-work/zap/cmd/zap@latest")
 		return err
 	default:
+		printScriptHint()
 		return err
 	}
+}
+
+func printScriptHint() {
+	fmt.Println()
+	fmt.Println("Or try using the install script:")
+	fmt.Println("  zap update --script")
 }
 
 func confirmUpdate(current, latest string) bool {
@@ -186,4 +208,30 @@ func confirmUpdate(current, latest string) bool {
 
 	input = strings.TrimSpace(strings.ToLower(input))
 	return input == "" || input == "y" || input == "yes"
+}
+
+func runScriptUpdate() error {
+	var cmd *exec.Cmd
+
+	switch runtime.GOOS {
+	case "windows":
+		script := fmt.Sprintf("iex ((New-Object System.Net.WebClient).DownloadString('%s'))", installScriptWindows)
+		if updateVersion != "" {
+			script = fmt.Sprintf("$env:ZAP_VERSION='%s'; ", updateVersion) + script
+		}
+		cmd = exec.Command("powershell", "-Command", script)
+	default:
+		script := fmt.Sprintf("curl -fsSL %s | bash", installScriptUnix)
+		if updateVersion != "" {
+			script = fmt.Sprintf("ZAP_VERSION=%s %s", updateVersion, script)
+		}
+		cmd = exec.Command("bash", "-c", script)
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	fmt.Printf("Running install script for %s...\n\n", runtime.GOOS)
+	return cmd.Run()
 }
