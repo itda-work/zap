@@ -134,5 +134,5 @@ func printParseWarnings(warnings []issue.ParseFailure) {
 		}
 		fmt.Printf("  %s: %s\n", colorize("- "+name, colorGray), errMsg)
 	}
-	fmt.Println(colorize("\nRun 'zap repair --all' to fix with AI (requires claude/codex/gemini CLI)", colorGray))
+	fmt.Println(colorize("\nRun 'zap repair --auto' to auto-fix with AI (requires claude/codex/gemini CLI)", colorGray))
 }

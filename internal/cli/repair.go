@@ -15,18 +15,27 @@ import (
 )
 
 var repairCmd = &cobra.Command{
-	Use:   "repair [number]",
+	Use:   "repair [number...]",
 	Short: "Repair issue files using AI",
 	Long: `Repair malformed issue files using AI CLI tools (claude, codex, gemini).
 
 Without arguments, shows files that need repair.
-With --all flag, repairs all failed files.
-With a number argument, repairs a specific file.`,
+With --auto flag, automatically repairs all failed files without confirmation.
+With --all flag, repairs all failed files (with confirmation).
+With number arguments, repairs specific files sequentially.
+
+Examples:
+  zap repair            # Show files that need repair
+  zap repair --auto     # Auto-repair all failed files
+  zap repair 155        # Repair issue #155
+  zap repair 155 159    # Repair issues #155 and #159
+  zap repair --all      # Repair all failed files (with confirmation)`,
 	RunE: runRepair,
 }
 
 var (
 	repairAll    bool
+	repairAuto   bool
 	repairDryRun bool
 	repairAI     string
 	repairYes    bool
@@ -36,12 +45,19 @@ func init() {
 	rootCmd.AddCommand(repairCmd)
 
 	repairCmd.Flags().BoolVarP(&repairAll, "all", "a", false, "Repair all files with parse failures")
+	repairCmd.Flags().BoolVar(&repairAuto, "auto", false, "Automatically repair all files without confirmation (same as --all --yes)")
 	repairCmd.Flags().BoolVar(&repairDryRun, "dry-run", false, "Show what would be changed without modifying files")
 	repairCmd.Flags().StringVar(&repairAI, "ai", "", "AI CLI to use (claude, codex, gemini)")
 	repairCmd.Flags().BoolVarP(&repairYes, "yes", "y", false, "Skip confirmation prompts")
 }
 
 func runRepair(cmd *cobra.Command, args []string) error {
+	// --auto implies --all --yes
+	if repairAuto {
+		repairAll = true
+		repairYes = true
+	}
+
 	dir, err := getIssuesDir(cmd)
 	if err != nil {
 		return err
@@ -61,17 +77,23 @@ func runRepair(cmd *cobra.Command, args []string) error {
 	var toRepair []issue.ParseFailure
 
 	if len(args) > 0 {
-		// Repair specific issue by number
-		number, err := strconv.Atoi(args[0])
-		if err != nil {
-			return fmt.Errorf("invalid issue number: %s", args[0])
-		}
+		// Repair specific issues by number
+		for _, arg := range args {
+			number, err := strconv.Atoi(arg)
+			if err != nil {
+				return fmt.Errorf("invalid issue number: %s", arg)
+			}
 
-		failure := store.GetFailureByNumber(number)
-		if failure == nil {
-			return fmt.Errorf("no parse failure found for issue #%d", number)
+			failure := store.GetFailureByNumber(number)
+			if failure == nil {
+				fmt.Printf("⚠️  No parse failure found for issue #%d, skipping\n", number)
+				continue
+			}
+			toRepair = append(toRepair, *failure)
 		}
-		toRepair = []issue.ParseFailure{*failure}
+		if len(toRepair) == 0 {
+			return fmt.Errorf("no valid parse failures found for the specified issues")
+		}
 	} else if repairAll {
 		toRepair = warnings
 	} else {
