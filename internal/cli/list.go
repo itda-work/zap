@@ -24,6 +24,7 @@ var (
 	listQuiet     bool
 	listSearch    string
 	listTitleOnly bool
+	listDateFilter DateFilter
 )
 
 func init() {
@@ -36,6 +37,14 @@ func init() {
 	listCmd.Flags().BoolVarP(&listQuiet, "quiet", "q", false, "Suppress parse failure warnings")
 	listCmd.Flags().StringVarP(&listSearch, "search", "S", "", "Search in title and body")
 	listCmd.Flags().BoolVar(&listTitleOnly, "title-only", false, "Search in title only (use with --search)")
+
+	// Date filter options
+	listCmd.Flags().BoolVar(&listDateFilter.Today, "today", false, "Show issues created/updated today")
+	listCmd.Flags().StringVar(&listDateFilter.Since, "since", "", "Show issues since date (YYYY-MM-DD)")
+	listCmd.Flags().StringVar(&listDateFilter.Until, "until", "", "Show issues until date (YYYY-MM-DD)")
+	listCmd.Flags().StringVar(&listDateFilter.Year, "year", "", "Show issues from year (YYYY)")
+	listCmd.Flags().StringVar(&listDateFilter.Month, "month", "", "Show issues from month (YYYY-MM)")
+	listCmd.Flags().StringVar(&listDateFilter.Date, "date", "", "Show issues from specific date (YYYY-MM-DD)")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -76,6 +85,14 @@ func runList(cmd *cobra.Command, args []string) error {
 	// Apply search filter if specified
 	if listSearch != "" {
 		issues = filterBySearch(issues, listSearch, listTitleOnly)
+	}
+
+	// Apply date filter if specified
+	if !listDateFilter.IsEmpty() {
+		issues, err = FilterIssuesByDate(issues, &listDateFilter)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Get warnings from store

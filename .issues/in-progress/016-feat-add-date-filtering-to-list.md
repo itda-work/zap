@@ -1,7 +1,7 @@
 ---
 number: 16
 title: "feat: zap list에 날짜 필터링 옵션 추가"
-state: open
+state: in-progress
 labels:
   - enhancement
   - cli
@@ -53,15 +53,24 @@ zap list --since 2026-01-01 --until 2026-01-15
 
 ## 작업 목록
 
-- [ ] 날짜 옵션 플래그 추가 (internal/cli/list.go)
-- [ ] Store에 날짜 필터링 메서드 추가 (internal/issue/store.go)
-- [ ] `--today`, `--since`, `--until`, `--year`, `--month`, `--date` 구현
-- [ ] 기존 필터들과 AND 조건으로 동작
-- [ ] 날짜 파싱 및 유효성 검사
+- [x] 날짜 옵션 플래그 추가 (internal/cli/list.go)
+- [x] DateFilter 공통 유틸 생성 (internal/cli/datefilter.go)
+- [x] `--today`, `--since`, `--until`, `--year`, `--month`, `--date` 구현
+- [x] 기존 필터들과 AND 조건으로 동작
+- [x] 날짜 파싱 및 유효성 검사
 - [ ] 테스트 추가
 
 ## 구현 참고
 
-- 날짜 필터 기준: `created_at` 또는 `updated_at` (옵션으로 선택 가능하게?)
-- 기본값: `created_at` 기준
+- 날짜 필터 기준: `created_at` 또는 `updated_at` (둘 다 검사)
 - 날짜 형식: ISO 8601 (YYYY-MM-DD)
+
+## 구현 기록
+
+### 2026-01-16
+
+- `DateFilter` 구조체와 공통 유틸 생성 (internal/cli/datefilter.go)
+- `--today`, `--since`, `--until`, `--year`, `--month`, `--date` 플래그 추가
+- `FilterIssuesByDate()` 함수 구현
+- `GetDateRange()` 메서드로 날짜 범위 계산
+- created_at 또는 updated_at 기준으로 필터링 (둘 중 하나만 범위 내에 있으면 포함)
