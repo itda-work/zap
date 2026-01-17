@@ -11,12 +11,13 @@ import (
 )
 
 var showCmd = &cobra.Command{
-	Use:     "show <number>",
-	Aliases: []string{"s"},
-	Short:   "Show issue details",
-	Long:    `Show detailed information about a specific issue.`,
-	Args:    cobra.ExactArgs(1),
-	RunE:    runShow,
+	Use:               "show <number>",
+	Aliases:           []string{"s"},
+	Short:             "Show issue details",
+	Long:              `Show detailed information about a specific issue.`,
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: completeIssueNumber,
+	RunE:              runShow,
 }
 
 var showRaw bool

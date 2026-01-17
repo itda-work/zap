@@ -111,6 +111,59 @@ updated_at: 2026-01-15T00:00:00Z
 - 작업 내용
 ```
 
+## 셸 자동완성
+
+이슈 번호 등의 인자에 대해 Tab 키 자동완성을 지원합니다.
+
+### Bash
+
+```bash
+# 현재 세션
+source <(zap completion bash)
+
+# 영구 적용 (Linux)
+zap completion bash > /etc/bash_completion.d/zap
+
+# 영구 적용 (macOS + Homebrew)
+zap completion bash > $(brew --prefix)/etc/bash_completion.d/zap
+```
+
+### Zsh
+
+```zsh
+# 현재 세션
+source <(zap completion zsh)
+
+# 영구 적용
+echo 'source <(zap completion zsh)' >> ~/.zshrc
+```
+
+### Fish
+
+```fish
+zap completion fish | source
+
+# 영구 적용
+zap completion fish > ~/.config/fish/completions/zap.fish
+```
+
+### PowerShell
+
+```powershell
+# 현재 세션
+zap completion powershell | Out-String | Invoke-Expression
+
+# 영구 적용
+zap completion powershell >> $PROFILE
+```
+
+### Windows 주의사항
+
+- **PowerShell**: 자동완성 지원 ✓
+- **cmd.exe**: 지원하지 않음 ✗ (동적 자동완성 메커니즘 없음)
+
+Windows에서는 **PowerShell 사용을 권장**합니다.
+
 ## 개발
 
 ```bash
