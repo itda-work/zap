@@ -17,14 +17,15 @@ var listCmd = &cobra.Command{
 }
 
 var (
-	listAll       bool
-	listState     string
-	listLabel     string
-	listAssignee  string
-	listQuiet     bool
-	listSearch    string
-	listTitleOnly bool
+	listAll        bool
+	listState      string
+	listLabel      string
+	listAssignee   string
+	listQuiet      bool
+	listSearch     string
+	listTitleOnly  bool
 	listDateFilter DateFilter
+	listRefs       bool
 )
 
 func init() {
@@ -47,6 +48,9 @@ func init() {
 	listCmd.Flags().StringVar(&listDateFilter.Date, "date", "", "Show issues from specific date (YYYY-MM-DD)")
 	listCmd.Flags().IntVar(&listDateFilter.Days, "days", 0, "Show issues from last N days")
 	listCmd.Flags().IntVar(&listDateFilter.Weeks, "weeks", 0, "Show issues from last N weeks")
+
+	// Reference options
+	listCmd.Flags().BoolVar(&listRefs, "refs", false, "Show reference count for each issue")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -105,8 +109,17 @@ func runList(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// Build ref graph if --refs is specified
+	var refGraph *issue.RefGraph
+	if listRefs {
+		refGraph, err = store.BuildRefGraph()
+		if err != nil {
+			return fmt.Errorf("failed to build reference graph: %w", err)
+		}
+	}
+
 	if len(issues) > 0 {
-		printIssueList(issues, len(warnings), listSearch)
+		printIssueList(issues, len(warnings), listSearch, refGraph)
 	}
 
 	// Print warnings unless --quiet is set
@@ -117,7 +130,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printIssueList(issues []*issue.Issue, skippedCount int, keyword string) {
+func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, refGraph *issue.RefGraph) {
 	// 상태별 텍스트 태그와 색상
 	stateStyle := map[issue.State]struct {
 		tag   string
@@ -136,12 +149,21 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string) {
 			labels = fmt.Sprintf(" [%s]", strings.Join(iss.Labels, ", "))
 		}
 
+		// Reference count suffix
+		refSuffix := ""
+		if refGraph != nil {
+			count := refGraph.GetRefCount(iss.Number)
+			if count > 0 {
+				refSuffix = fmt.Sprintf(" %s", colorize(fmt.Sprintf("(refs: %d)", count), colorGray))
+			}
+		}
+
 		// 제목에 키워드 하이라이트 적용
 		title := highlightKeyword(iss.Title, keyword)
 
 		// 태그를 색상 적용 후 출력, 나머지는 기본 색상
 		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
-		fmt.Printf("%s #%-4d %s%s\n", tag, iss.Number, title, labels)
+		fmt.Printf("%s #%-4d %s%s%s\n", tag, iss.Number, title, labels, refSuffix)
 	}
 
 	if skippedCount > 0 {

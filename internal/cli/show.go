@@ -20,12 +20,16 @@ var showCmd = &cobra.Command{
 	RunE:              runShow,
 }
 
-var showRaw bool
+var (
+	showRaw  bool
+	showRefs bool
+)
 
 func init() {
 	rootCmd.AddCommand(showCmd)
 
 	showCmd.Flags().BoolVar(&showRaw, "raw", false, "Show raw markdown content")
+	showCmd.Flags().BoolVar(&showRefs, "refs", false, "Show referenced issues graph")
 }
 
 func runShow(cmd *cobra.Command, args []string) error {
@@ -49,6 +53,10 @@ func runShow(cmd *cobra.Command, args []string) error {
 		printRawIssue(iss)
 	} else {
 		printIssueDetail(iss)
+	}
+
+	if showRefs {
+		printRefsGraph(store, number)
 	}
 
 	return nil
@@ -218,4 +226,96 @@ func printRawIssue(iss *issue.Issue) {
 		return
 	}
 	fmt.Print(string(data))
+}
+
+func printRefsGraph(store *issue.Store, issueNum int) {
+	graph, err := store.BuildRefGraph()
+	if err != nil {
+		fmt.Printf("Error building reference graph: %v\n", err)
+		return
+	}
+
+	tree := graph.BuildTree(issueNum)
+	if len(tree) == 0 {
+		return
+	}
+
+	fmt.Println()
+	fmt.Println()
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Println("Referenced Issues:")
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	printRefTree(tree, "", true)
+	fmt.Println()
+	fmt.Println(colorize("(→: mentions, ←: mentioned by)", colorGray))
+}
+
+func printRefTree(nodes []*issue.TreeNode, prefix string, isRoot bool) {
+	for i, node := range nodes {
+		isLast := i == len(nodes)-1
+
+		// Determine connector
+		var connector string
+		if isRoot {
+			if isLast {
+				connector = "└── "
+			} else {
+				connector = "├── "
+			}
+		} else {
+			if isLast {
+				connector = "└── "
+			} else {
+				connector = "├── "
+			}
+		}
+
+		// Direction arrow
+		arrow := "→"
+		if node.Direction == issue.RefMentionedBy {
+			arrow = "←"
+		}
+
+		// State tag and color
+		stateTag := fmt.Sprintf("[%s]", node.Issue.State)
+		color := stateColor(node.Issue.State)
+
+		// Print node with state-based coloring
+		issueInfo := fmt.Sprintf("%s #%d %s %s", arrow, node.Issue.Number, node.Issue.Title, stateTag)
+		fmt.Printf("%s%s%s\n", prefix, connector, colorize(issueInfo, color))
+
+		// Calculate new prefix for children
+		var childPrefix string
+		if isRoot {
+			if isLast {
+				childPrefix = prefix + "    "
+			} else {
+				childPrefix = prefix + "│   "
+			}
+		} else {
+			if isLast {
+				childPrefix = prefix + "    "
+			} else {
+				childPrefix = prefix + "│   "
+			}
+		}
+
+		// Print children
+		if len(node.Children) > 0 {
+			printRefTree(node.Children, childPrefix, false)
+		}
+	}
+}
+
+func stateColor(s issue.State) string {
+	switch s {
+	case issue.StateInProgress:
+		return colorYellow
+	case issue.StateDone:
+		return colorGreen
+	case issue.StateClosed:
+		return colorGray
+	default:
+		return ""
+	}
 }
