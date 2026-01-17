@@ -120,20 +120,92 @@ func removeBlankLines(s string) string {
 	return strings.Join(result, "\n")
 }
 
-// 리스트 항목 사이 여백을 제거한 컴팩트 스타일
+// 모든 마크다운 요소의 여백을 제거한 컴팩트 스타일
+// glamour StyleConfig의 모든 여백 관련 요소를 0으로 설정
 const compactStyle = `{
-	"list": {
-		"level_indent": 2,
-		"margin": 0
-	},
-	"item": {
+	"document": {
+		"margin": 0,
 		"block_prefix": "",
-		"margin": 0
+		"block_suffix": ""
+	},
+	"block_quote": {
+		"margin": 0,
+		"indent": 1,
+		"indent_token": "│ "
 	},
 	"paragraph": {
 		"margin": 0
 	},
+	"list": {
+		"margin": 0,
+		"level_indent": 2
+	},
+	"heading": {
+		"margin": 0,
+		"block_suffix": ""
+	},
+	"h1": {
+		"margin": 0,
+		"block_suffix": "",
+		"prefix": "# "
+	},
+	"h2": {
+		"margin": 0,
+		"block_suffix": "",
+		"prefix": "## "
+	},
+	"h3": {
+		"margin": 0,
+		"block_suffix": "",
+		"prefix": "### "
+	},
+	"h4": {
+		"margin": 0,
+		"block_suffix": "",
+		"prefix": "#### "
+	},
+	"h5": {
+		"margin": 0,
+		"block_suffix": "",
+		"prefix": "##### "
+	},
+	"h6": {
+		"margin": 0,
+		"block_suffix": "",
+		"prefix": "###### "
+	},
+	"hr": {
+		"format": "--------"
+	},
+	"item": {
+		"block_prefix": "• "
+	},
+	"enumeration": {
+		"block_prefix": ". "
+	},
+	"task": {
+		"ticked": "[x] ",
+		"unticked": "[ ] "
+	},
+	"code": {
+		"margin": 0
+	},
 	"code_block": {
+		"margin": 0
+	},
+	"table": {
+		"margin": 0
+	},
+	"definition_list": {
+		"margin": 0
+	},
+	"definition_description": {
+		"block_prefix": ""
+	},
+	"html_block": {
+		"margin": 0
+	},
+	"html_span": {
 		"margin": 0
 	}
 }`
