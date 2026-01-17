@@ -10,9 +10,10 @@ import (
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init <agent>",
-	Short: "Initialize agent instruction file",
-	Long: `Initialize an instruction file for AI coding assistants.
+	Use:     "init <agent>",
+	Aliases: []string{"i"},
+	Short:   "Initialize agent instruction file",
+	Long:    `Initialize an instruction file for AI coding assistants.
 
 Supported agents:
   claude    Create CLAUDE.md for Claude Code

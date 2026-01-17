@@ -9,10 +9,11 @@ import (
 )
 
 var statsCmd = &cobra.Command{
-	Use:   "stats",
-	Short: "Show issue statistics",
-	Long:  `Display statistics about issues including counts by state, label, and assignee.`,
-	RunE:  runStats,
+	Use:     "stats",
+	Aliases: []string{"st"},
+	Short:   "Show issue statistics",
+	Long:    `Display statistics about issues including counts by state, label, and assignee.`,
+	RunE:    runStats,
 }
 
 var statsDateFilter DateFilter

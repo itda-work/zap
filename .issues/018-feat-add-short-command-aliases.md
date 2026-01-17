@@ -1,14 +1,15 @@
 ---
 number: 18
 title: 'feat: 명령어 짧은 alias 추가'
-state: open
+state: done
 labels:
     - enhancement
     - cli
     - ux
 assignees: []
 created_at: 2026-01-16T00:00:00Z
-updated_at: 2026-01-16T23:28:52.855517+09:00
+updated_at: 2026-01-17T10:15:24.560522+09:00
+closed_at: 2026-01-17T10:15:24.560522+09:00
 ---
 
 ## 개요
@@ -66,19 +67,32 @@ zap up            # zap update
 
 ## 작업 목록
 
-- [ ] `show` → `s` alias 추가
-- [ ] `stats` → `st` alias 추가
-- [ ] `start` → `wip` alias 추가
-- [ ] `done` → `d` alias 추가
-- [ ] `close` → `c` alias 추가
-- [ ] `open` → `o` alias 추가
-- [ ] `repair` → `r` alias 추가
-- [ ] `init` → `i` alias 추가
-- [ ] `update` → `up` alias 추가
-- [ ] 테스트
+- [x] `show` → `s` alias 추가
+- [x] `stats` → `st` alias 추가
+- [x] `start` → `wip` alias 추가
+- [x] `done` → `d` alias 추가
+- [x] `close` → `c` alias 추가
+- [x] `open` → `o` alias 추가
+- [x] `repair` → `r` alias 추가
+- [x] `init` → `i` alias 추가
+- [x] `update` → `up` alias 추가
+- [x] 테스트
 
 ## 구현 참고
 
 - cobra의 `Aliases` 필드 사용 (list.go 참고)
 - `completion`, `help`, `version`은 자주 사용하지 않으므로 제외
 - `start` → `wip`은 상태명(`in-progress`)과 연관되어 직관적
+
+## 구현 내역
+
+각 CLI 명령의 `cobra.Command` 구조체에 `Aliases` 필드 추가:
+
+| 파일 | 추가된 Alias |
+|------|-------------|
+| `internal/cli/show.go` | `s` |
+| `internal/cli/stats.go` | `st` |
+| `internal/cli/move.go` | `o`, `wip`, `d`, `c` |
+| `internal/cli/repair.go` | `r` |
+| `internal/cli/init.go` | `i` |
+| `internal/cli/update.go` | `up` |

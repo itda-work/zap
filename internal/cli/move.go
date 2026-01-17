@@ -9,31 +9,35 @@ import (
 )
 
 var openCmd = &cobra.Command{
-	Use:   "open <number>",
-	Short: "Move issue to open state",
-	Args:  cobra.ExactArgs(1),
-	RunE:  makeMoveFunc(issue.StateOpen),
+	Use:     "open <number>",
+	Aliases: []string{"o"},
+	Short:   "Move issue to open state",
+	Args:    cobra.ExactArgs(1),
+	RunE:    makeMoveFunc(issue.StateOpen),
 }
 
 var startCmd = &cobra.Command{
-	Use:   "start <number>",
-	Short: "Move issue to in-progress state",
-	Args:  cobra.ExactArgs(1),
-	RunE:  makeMoveFunc(issue.StateInProgress),
+	Use:     "start <number>",
+	Aliases: []string{"wip"},
+	Short:   "Move issue to in-progress state",
+	Args:    cobra.ExactArgs(1),
+	RunE:    makeMoveFunc(issue.StateInProgress),
 }
 
 var doneCmd = &cobra.Command{
-	Use:   "done <number>",
-	Short: "Move issue to done state",
-	Args:  cobra.ExactArgs(1),
-	RunE:  makeMoveFunc(issue.StateDone),
+	Use:     "done <number>",
+	Aliases: []string{"d"},
+	Short:   "Move issue to done state",
+	Args:    cobra.ExactArgs(1),
+	RunE:    makeMoveFunc(issue.StateDone),
 }
 
 var closeCmd = &cobra.Command{
-	Use:   "close <number>",
-	Short: "Move issue to closed state (cancelled/on-hold)",
-	Args:  cobra.ExactArgs(1),
-	RunE:  makeMoveFunc(issue.StateClosed),
+	Use:     "close <number>",
+	Aliases: []string{"c"},
+	Short:   "Move issue to closed state (cancelled/on-hold)",
+	Args:    cobra.ExactArgs(1),
+	RunE:    makeMoveFunc(issue.StateClosed),
 }
 
 func init() {

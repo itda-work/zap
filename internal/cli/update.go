@@ -27,9 +27,10 @@ var (
 )
 
 var updateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Update zap to the latest version",
-	Long: `Check for and install updates to zap from GitHub releases.
+	Use:     "update",
+	Aliases: []string{"up"},
+	Short:   "Update zap to the latest version",
+	Long:    `Check for and install updates to zap from GitHub releases.
 
 Examples:
   zap update              # Check and update interactively

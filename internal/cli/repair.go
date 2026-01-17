@@ -15,9 +15,10 @@ import (
 )
 
 var repairCmd = &cobra.Command{
-	Use:   "repair [number...]",
-	Short: "Repair issue files using AI",
-	Long: `Repair malformed issue files using AI CLI tools (claude, codex, gemini).
+	Use:     "repair [number...]",
+	Aliases: []string{"r"},
+	Short:   "Repair issue files using AI",
+	Long:    `Repair malformed issue files using AI CLI tools (claude, codex, gemini).
 
 Without arguments, shows files that need repair.
 With --auto flag, automatically repairs all failed files without confirmation.
