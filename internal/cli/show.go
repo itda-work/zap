@@ -2,11 +2,18 @@ package cli
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"os/signal"
+	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
-	"github.com/itda-work/zap/internal/issue"
 	"github.com/charmbracelet/glamour"
+	"github.com/fsnotify/fsnotify"
+	"github.com/itda-work/zap/internal/issue"
 	"github.com/spf13/cobra"
 )
 
@@ -21,8 +28,10 @@ var showCmd = &cobra.Command{
 }
 
 var (
-	showRaw  bool
-	showRefs bool
+	showRaw    bool
+	showRefs   bool
+	showWatch  bool
+	showNotify bool
 )
 
 func init() {
@@ -30,6 +39,8 @@ func init() {
 
 	showCmd.Flags().BoolVar(&showRaw, "raw", false, "Show raw markdown content")
 	showCmd.Flags().BoolVar(&showRefs, "refs", false, "Show referenced issues graph")
+	showCmd.Flags().BoolVarP(&showWatch, "watch", "w", false, "Watch for file changes (like tail -f)")
+	showCmd.Flags().BoolVar(&showNotify, "notify", false, "Send system notification when state changes to done (requires -w)")
 }
 
 func runShow(cmd *cobra.Command, args []string) error {
@@ -49,6 +60,14 @@ func runShow(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if showWatch {
+		return watchIssue(store, iss)
+	}
+
+	return displayIssue(store, iss)
+}
+
+func displayIssue(store *issue.Store, iss *issue.Issue) error {
 	if showRaw {
 		printRawIssue(iss)
 	} else {
@@ -56,10 +75,126 @@ func runShow(cmd *cobra.Command, args []string) error {
 	}
 
 	if showRefs {
-		printRefsGraph(store, number)
+		printRefsGraph(store, iss.Number)
 	}
 
 	return nil
+}
+
+func watchIssue(store *issue.Store, iss *issue.Issue) error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("failed to create file watcher: %w", err)
+	}
+	defer watcher.Close()
+
+	if err := watcher.Add(iss.FilePath); err != nil {
+		return fmt.Errorf("failed to watch file: %w", err)
+	}
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(sigChan)
+
+	clearScreen()
+	if err := displayIssue(store, iss); err != nil {
+		return err
+	}
+	printWatchHint()
+
+	debounce := time.NewTimer(0)
+	debounce.Stop()
+	defer debounce.Stop()
+
+	prevState := iss.State
+
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return nil
+			}
+
+			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
+				debounce.Reset(50 * time.Millisecond)
+			}
+
+			if event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) {
+				time.Sleep(100 * time.Millisecond)
+				if _, err := os.Stat(iss.FilePath); err == nil {
+					watcher.Add(iss.FilePath)
+				} else {
+					fmt.Println("\nFile was removed. Stopping watch.")
+					return nil
+				}
+			}
+
+		case <-debounce.C:
+			updated, err := issue.Parse(iss.FilePath)
+			if err != nil {
+				continue
+			}
+
+			clearScreen()
+			if err := displayIssue(store, updated); err != nil {
+				fmt.Fprintf(os.Stderr, "Error displaying issue: %v\n", err)
+			}
+
+			if prevState != issue.StateDone && updated.State == issue.StateDone {
+				notifyDone(updated)
+			}
+			prevState = updated.State
+
+			printWatchHint()
+
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return nil
+			}
+			fmt.Fprintf(os.Stderr, "Watch error: %v\n", err)
+
+		case <-sigChan:
+			fmt.Println("\nStopping watch...")
+			return nil
+		}
+	}
+}
+
+func clearScreen() {
+	fmt.Print("\033[2J\033[H")
+}
+
+func printWatchHint() {
+	fmt.Println()
+	fmt.Println(colorize("Watching for changes... (Ctrl+C to exit)", colorGray))
+}
+
+func notifyDone(iss *issue.Issue) {
+	// Terminal bell
+	fmt.Print("\a")
+
+	// Visual notification
+	fmt.Println()
+	fmt.Println(colorize("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", colorGreen))
+	fmt.Println(colorize(fmt.Sprintf("✓ Issue #%d marked as done!", iss.Number), colorGreen))
+	fmt.Println(colorize("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", colorGreen))
+
+	// System notification (if --notify flag is set)
+	if showNotify {
+		sendSystemNotification(
+			"Issue Completed",
+			fmt.Sprintf("#%d: %s", iss.Number, iss.Title),
+		)
+	}
+}
+
+func sendSystemNotification(title, message string) {
+	if runtime.GOOS != "darwin" {
+		return
+	}
+
+	script := fmt.Sprintf(`display notification "%s" with title "%s"`, message, title)
+	exec.Command("osascript", "-e", script).Run()
 }
 
 func printIssueDetail(iss *issue.Issue) {
