@@ -1,6 +1,6 @@
 ---
 number: 1
-title: 'feat: lim - Local Issue Manager CLI/TUI 도구 개발'
+title: 'feat: zap - Local Issue Manager CLI/TUI 도구 개발'
 state: done
 labels:
     - feature
@@ -29,7 +29,7 @@ updated_at: 2026-01-15T00:00:00Z
 ```
 itda-issues/
 ├── cmd/
-│   └── lim/
+│   └── zap/
 │       └── main.go
 ├── internal/
 │   ├── issue/          # 이슈 파싱/관리 로직
@@ -90,31 +90,31 @@ closed_at:
 
 ```bash
 # 목록 조회
-lim list                    # 열린 이슈 (open + in-progress)
-lim list --all              # 전체 이슈
-lim list --state open       # 특정 상태
-lim list --label bug        # 레이블 필터
+zap list                    # 열린 이슈 (open + in-progress)
+zap list --all              # 전체 이슈
+zap list --state open       # 특정 상태
+zap list --label bug        # 레이블 필터
 
 # 상세 보기
-lim show 1                  # 이슈 #1 상세
-lim show 1 --raw            # 원본 마크다운 출력
+zap show 1                  # 이슈 #1 상세
+zap show 1 --raw            # 원본 마크다운 출력
 
 # 상태 변경
-lim open 1                  # → open/
-lim start 1                 # → in-progress/
-lim done 1                  # → done/
-lim close 1                 # → closed/
+zap open 1                  # → open/
+zap start 1                 # → in-progress/
+zap done 1                  # → done/
+zap close 1                 # → closed/
 
 # 검색
-lim search "키워드"          # 제목/내용 검색
-lim search --title "키워드"  # 제목만 검색
+zap search "키워드"          # 제목/내용 검색
+zap search --title "키워드"  # 제목만 검색
 
 # 통계
-lim stats                   # 상태별 이슈 수, 최근 활동
+zap stats                   # 상태별 이슈 수, 최근 활동
 
 # TUI
-lim tui                     # TUI 모드 진입
-lim                         # 인자 없으면 TUI 모드
+zap tui                     # TUI 모드 진입
+zap                         # 인자 없으면 TUI 모드
 ```
 
 ### TUI 기능
@@ -149,11 +149,11 @@ gopkg.in/yaml.v3                     # YAML 파싱
 
 ### Phase 3: CLI 구현
 - [x] root 명령어 설정
-- [x] `lim list` 구현
-- [x] `lim show` 구현
-- [x] `lim open/start/done` 구현
-- [x] `lim search` 구현
-- [x] `lim stats` 구현
+- [x] `zap list` 구현
+- [x] `zap show` 구현
+- [x] `zap open/start/done` 구현
+- [x] `zap search` 구현
+- [x] `zap stats` 구현
 
 ### Phase 4: TUI 구현
 - [x] TUI 앱 기본 구조
@@ -184,8 +184,8 @@ gopkg.in/yaml.v3                     # YAML 파싱
 **Phase 1-4 완료:**
 
 1. **프로젝트 초기화**
-   - `go mod init github.com/allieus/lim`
-   - 디렉토리 구조: `cmd/lim/`, `internal/{issue,cli,tui}/`
+   - `go mod init github.com/itda-work/zap`
+   - 디렉토리 구조: `cmd/zap/`, `internal/{issue,cli,tui}/`
 
 2. **핵심 로직** (`internal/issue/`)
    - `issue.go`: Issue 모델, State 타입 정의
@@ -209,11 +209,11 @@ gopkg.in/yaml.v3                     # YAML 파싱
 
 **테스트 결과:**
 ```bash
-./lim list          # ✅ 동작
-./lim show 1        # ✅ 동작
-./lim stats         # ✅ 동작
-./lim search "lim"  # ✅ 동작
-./lim --help        # ✅ 동작
+./zap list          # ✅ 동작
+./zap show 1        # ✅ 동작
+./zap stats         # ✅ 동작
+./zap search "zap"  # ✅ 동작
+./zap --help        # ✅ 동작
 ```
 
 **의존성:**

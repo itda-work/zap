@@ -16,8 +16,8 @@ updated_at: 2026-01-15T00:00:00Z
 
 ## 현재 상황
 
-- `lim show` CLI 명령어: plain text로 출력
-- `lim tui` 상세 뷰: plain text로 출력
+- `zap show` CLI 명령어: plain text로 출력
+- `zap tui` 상세 뷰: plain text로 출력
 - 코드 블록, 헤더, 링크 등이 구분되지 않아 가독성 저하
 
 ## 제안
@@ -60,7 +60,7 @@ fmt.Print(out)
 
 ## 적용 범위
 
-1. **CLI `lim show`**: glamour로 렌더링된 출력
+1. **CLI `zap show`**: glamour로 렌더링된 출력
 2. **TUI 상세 뷰**: glamour로 렌더링된 내용 표시
 3. **TUI 목록**: 제목만 표시하므로 변경 불필요
 
@@ -77,7 +77,7 @@ fmt.Print(out)
 ### 2026-01-15
 
 - glamour v0.10.0 의존성 추가
-- CLI `lim show` 명령어에 glamour 렌더링 적용 (`internal/cli/show.go`)
+- CLI `zap show` 명령어에 glamour 렌더링 적용 (`internal/cli/show.go`)
 - TUI 상세 뷰에 glamour 렌더링 적용 (`internal/tui/app.go`)
 - 자동 스타일 감지 (`glamour.WithAutoStyle()`)
 - 터미널 너비에 맞는 word wrap 적용

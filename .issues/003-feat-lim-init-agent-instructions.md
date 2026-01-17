@@ -1,6 +1,6 @@
 ---
 number: 3
-title: "feat: lim init - AI 에이전트용 지침 파일 생성 명령"
+title: "feat: zap init - AI 에이전트용 지침 파일 생성 명령"
 state: done
 labels:
   - feature
@@ -13,11 +13,11 @@ updated_at: 2026-01-15T00:00:00Z
 
 ## 개요
 
-`lim init <agent>` 명령을 추가하여 AI 코딩 어시스턴트용 지침 파일을 자동 생성합니다.
+`zap init <agent>` 명령을 추가하여 AI 코딩 어시스턴트용 지침 파일을 자동 생성합니다.
 
 ## 배경
 
-- AI 코딩 어시스턴트(Claude, Codex, Gemini 등)가 .issues/ 디렉토리 구조와 lim 사용법을 이해하도록 지침 필요
+- AI 코딩 어시스턴트(Claude, Codex, Gemini 등)가 .issues/ 디렉토리 구조와 zap 사용법을 이해하도록 지침 필요
 - 프로젝트마다 수동으로 지침을 작성하는 것은 번거로움
 - 표준화된 지침 템플릿으로 일관된 AI 어시스턴트 경험 제공
 
@@ -26,7 +26,7 @@ updated_at: 2026-01-15T00:00:00Z
 ### 명령어 형식
 
 ```bash
-lim init <agent> [--path <path>]
+zap init <agent> [--path <path>]
 ```
 
 ### 지원 에이전트
@@ -47,14 +47,14 @@ lim init <agent> [--path <path>]
 2. 파일이 이미 존재할 경우: 파일 끝에 추가 (append)
 3. 지침 내용:
    - .issues/ 디렉토리 구조
-   - lim CLI 명령어 사용법
+   - zap CLI 명령어 사용법
    - 이슈 파일 형식 (YAML frontmatter)
    - 워크플로우 가이드
 
 ### 지침 템플릿 내용
 
 ```markdown
-# Local Issue Management (lim)
+# Local Issue Management (zap)
 
 ## .issues/ 디렉토리 구조
 
@@ -80,35 +80,35 @@ updated_at: 2026-01-15T00:00:00Z
 
 이슈 본문 내용...
 
-## lim 명령어
+## zap 명령어
 
 ### 목록 조회
-lim list                    # 열린 이슈 (open + in-progress)
-lim list --all              # 전체 이슈
-lim list --state open       # 특정 상태
-lim list --label bug        # 레이블 필터
+zap list                    # 열린 이슈 (open + in-progress)
+zap list --all              # 전체 이슈
+zap list --state open       # 특정 상태
+zap list --label bug        # 레이블 필터
 
 ### 상세 보기
-lim show 1                  # 이슈 #1 상세
-lim show 1 --raw            # 원본 마크다운 출력
+zap show 1                  # 이슈 #1 상세
+zap show 1 --raw            # 원본 마크다운 출력
 
 ### 상태 변경
-lim open 1                  # → open/
-lim start 1                 # → in-progress/
-lim done 1                  # → done/
+zap open 1                  # → open/
+zap start 1                 # → in-progress/
+zap done 1                  # → done/
 
 ### 검색
-lim search "키워드"          # 제목/내용 검색
-lim search --title "키워드"  # 제목만 검색
+zap search "키워드"          # 제목/내용 검색
+zap search --title "키워드"  # 제목만 검색
 
 ### 통계
-lim stats                   # 상태별 이슈 수, 최근 활동
+zap stats                   # 상태별 이슈 수, 최근 활동
 
 ## 워크플로우
 
 1. 새 이슈 생성: .issues/open/NNN-slug.md 파일 생성
-2. 작업 시작: lim start <number>
-3. 작업 완료: lim done <number>
+2. 작업 시작: zap start <number>
+3. 작업 완료: zap done <number>
 ```
 
 ## 작업 목록
@@ -126,14 +126,14 @@ lim stats                   # 상태별 이슈 수, 최근 활동
 #### 구현 완료
 
 1. **internal/cli/init.go 생성**
-   - `lim init <agent>` 명령 구현
+   - `zap init <agent>` 명령 구현
    - 지원 에이전트: claude, codex, gemini
    - 에이전트별 기본 파일명 매핑
 
 2. **지침 템플릿**
    - .issues/ 디렉토리 구조
    - 이슈 파일 형식 (YAML frontmatter)
-   - lim CLI 명령어 전체
+   - zap CLI 명령어 전체
    - TUI 단축키
    - 워크플로우 가이드
 
@@ -148,9 +148,9 @@ lim stats                   # 상태별 이슈 수, 최근 활동
 **사용 예시:**
 
 ```bash
-lim init claude                        # → CLAUDE.md
-lim init claude --path AI_GUIDE.md     # → AI_GUIDE.md
-lim init codex --path docs/AGENTS.md   # → docs/AGENTS.md (폴더 자동 생성)
+zap init claude                        # → CLAUDE.md
+zap init claude --path AI_GUIDE.md     # → AI_GUIDE.md
+zap init codex --path docs/AGENTS.md   # → docs/AGENTS.md (폴더 자동 생성)
 ```
 
 ## 참고
