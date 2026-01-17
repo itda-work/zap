@@ -153,15 +153,41 @@ zap show 10
 
 이슈 상태는 파일의 YAML frontmatter에 있는 ` + "`state`" + ` 필드로 결정됩니다.
 
-## 이슈 파일 형식
+## 이슈 생성 (중요!)
 
-이슈 파일은 YAML frontmatter와 Markdown 본문으로 구성됩니다:
+### zap new 명령 사용 (권장)
+
+이슈 생성 시 반드시 ` + "`zap new`" + ` 명령을 사용하세요. 올바른 형식이 자동으로 적용됩니다:
+
+` + "```" + `bash
+# 기본 사용법
+zap new "이슈 제목"
+
+# 레이블 추가
+zap new "버그 수정" -l bug -l urgent
+
+# 담당자 추가
+zap new "기능 구현" -a username
+
+# 본문 추가
+zap new "이슈 제목" --body "상세 설명 내용"
+
+# 파이프로 본문 전달 (AI 사용 시 유용)
+echo "상세 본문 내용" | zap new "이슈 제목"
+
+# 에디터로 본문 작성
+zap new "이슈 제목" --editor
+` + "```" + `
+
+### 수동 생성 시 정확한 형식 (zap new 사용 불가 시)
+
+수동으로 이슈를 생성해야 하는 경우, 아래 형식을 **정확히** 따르세요:
 
 ` + "```" + `markdown
 ---
 number: 1
 title: "이슈 제목"
-state: open                     # 상태: open, in-progress, done, closed
+state: open
 labels:
   - bug
   - urgent
@@ -176,9 +202,31 @@ updated_at: 2026-01-15T00:00:00Z
 이슈 본문 내용...
 ` + "```" + `
 
-파일명 규칙: ` + "`NNN-slug.md`" + ` (예: ` + "`001-feat-user-auth.md`" + `)
+**필수 검증 체크리스트:**
+- [ ] 파일이 ` + "`---`" + `로 시작
+- [ ] ` + "`number`" + `: 양의 정수, 파일명과 일치
+- [ ] ` + "`title`" + `: 비어있지 않은 문자열 (따옴표 권장)
+- [ ] ` + "`state`" + `: open, in-progress, done, closed 중 하나
+- [ ] ` + "`labels`" + `: YAML 배열 형식 (비어있으면 ` + "`[]`" + `)
+- [ ] ` + "`assignees`" + `: YAML 배열 형식 (비어있으면 ` + "`[]`" + `)
+- [ ] 날짜: RFC3339/ISO8601 형식 (` + "`YYYY-MM-DDTHH:MM:SSZ`" + `)
+- [ ] frontmatter가 ` + "`---`" + `로 종료
+
+**파일명 규칙:** ` + "`NNN-slug.md`" + `
+- NNN: 3자리 제로패딩 숫자 (예: 001, 024)
+- slug: 소문자, 하이픈 구분, 한글 지원
+- 예: ` + "`024-feat-user-auth.md`" + `, ` + "`025-버그-수정.md`" + `
 
 ## zap CLI 명령어
+
+### 이슈 생성
+
+` + "```" + `bash
+zap new "제목"              # 새 이슈 생성
+zap new "제목" -l label     # 레이블과 함께 생성
+zap new "제목" -a user      # 담당자와 함께 생성
+zap new "제목" -b "본문"    # 본문과 함께 생성
+` + "```" + `
 
 ### 목록 조회
 
@@ -232,13 +280,14 @@ zap migrate --dry-run       # 변경 사항 미리보기
 
 ## 워크플로우
 
-1. **새 이슈 생성**: ` + "`.issues/NNN-slug.md`" + ` 파일을 직접 생성 (state: open)
+1. **새 이슈 생성**: ` + "`zap new \"이슈 제목\"`" + ` 실행
 2. **작업 시작**: ` + "`zap start <number>`" + ` 실행
 3. **작업 완료**: ` + "`zap done <number>`" + ` 실행
 4. **취소/보류**: ` + "`zap close <number>`" + ` 실행
 
 ## 주의사항
 
+- **이슈 생성 시 반드시 ` + "`zap new`" + ` 명령을 사용하세요** (파싱 오류 방지)
 - 이슈 번호는 고유해야 합니다
 - 파일명의 번호와 frontmatter의 number가 일치해야 합니다
 - 상태 변경 시 frontmatter의 state 필드가 업데이트됩니다
