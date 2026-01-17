@@ -156,3 +156,110 @@ func containsStringHelper(s, substr string) bool {
 	}
 	return false
 }
+
+func TestParseBytesAlternativeFieldNames(t *testing.T) {
+	// Test with "created" and "updated" instead of "created_at" and "updated_at"
+	content := `---
+number: 21
+title: "iOS 빌드 환경 설정"
+state: done
+created: 2026-01-17 15:47
+updated: 2026-01-17 15:48
+---
+
+# Description
+
+This issue uses alternative field names.
+`
+
+	issue, err := ParseBytes([]byte(content), "test.md")
+	if err != nil {
+		t.Fatalf("ParseBytes failed: %v", err)
+	}
+
+	if issue.Number != 21 {
+		t.Errorf("Number = %d, want 21", issue.Number)
+	}
+
+	if issue.Title != "iOS 빌드 환경 설정" {
+		t.Errorf("Title = %q, want %q", issue.Title, "iOS 빌드 환경 설정")
+	}
+
+	if issue.State != StateDone {
+		t.Errorf("State = %q, want %q", issue.State, StateDone)
+	}
+
+	// Check that dates were parsed correctly
+	expectedCreated := time.Date(2026, 1, 17, 15, 47, 0, 0, time.UTC)
+	if !issue.CreatedAt.Equal(expectedCreated) {
+		t.Errorf("CreatedAt = %v, want %v", issue.CreatedAt, expectedCreated)
+	}
+
+	expectedUpdated := time.Date(2026, 1, 17, 15, 48, 0, 0, time.UTC)
+	if !issue.UpdatedAt.Equal(expectedUpdated) {
+		t.Errorf("UpdatedAt = %v, want %v", issue.UpdatedAt, expectedUpdated)
+	}
+}
+
+func TestParseFlexibleTime(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected time.Time
+		wantErr  bool
+	}{
+		{
+			name:     "RFC3339",
+			input:    "2026-01-17T15:47:00Z",
+			expected: time.Date(2026, 1, 17, 15, 47, 0, 0, time.UTC),
+		},
+		{
+			name:     "datetime without timezone",
+			input:    "2026-01-17T15:47:00",
+			expected: time.Date(2026, 1, 17, 15, 47, 0, 0, time.UTC),
+		},
+		{
+			name:     "datetime with space",
+			input:    "2026-01-17 15:47:00",
+			expected: time.Date(2026, 1, 17, 15, 47, 0, 0, time.UTC),
+		},
+		{
+			name:     "datetime without seconds",
+			input:    "2026-01-17 15:47",
+			expected: time.Date(2026, 1, 17, 15, 47, 0, 0, time.UTC),
+		},
+		{
+			name:     "date only",
+			input:    "2026-01-17",
+			expected: time.Date(2026, 1, 17, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			name:     "empty string",
+			input:    "",
+			expected: time.Time{},
+		},
+		{
+			name:    "invalid format",
+			input:   "not-a-date",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := parseFlexibleTime(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Error("Expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+			if !result.Equal(tt.expected) {
+				t.Errorf("parseFlexibleTime(%q) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}

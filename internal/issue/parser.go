@@ -6,9 +6,59 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
+
+// rawFrontmatter is an intermediate struct that supports both field naming conventions
+type rawFrontmatter struct {
+	Number    int      `yaml:"number"`
+	Title     string   `yaml:"title"`
+	State     State    `yaml:"state"`
+	Labels    []string `yaml:"labels"`
+	Assignees []string `yaml:"assignees"`
+
+	// Support both naming conventions
+	CreatedAt string `yaml:"created_at"`
+	Created   string `yaml:"created"`
+	UpdatedAt string `yaml:"updated_at"`
+	Updated   string `yaml:"updated"`
+	ClosedAt  string `yaml:"closed_at"`
+}
+
+// parseFlexibleTime parses time from various formats
+func parseFlexibleTime(s string) (time.Time, error) {
+	if s == "" {
+		return time.Time{}, nil
+	}
+
+	formats := []string{
+		time.RFC3339,           // 2026-01-17T15:47:00Z
+		"2006-01-02T15:04:05",  // 2026-01-17T15:47:00
+		"2006-01-02 15:04:05",  // 2026-01-17 15:47:00
+		"2006-01-02 15:04",     // 2026-01-17 15:47
+		"2006-01-02",           // 2026-01-17
+	}
+
+	for _, format := range formats {
+		if t, err := time.Parse(format, s); err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("unable to parse time: %s", s)
+}
+
+// coalesce returns the first non-empty string
+func coalesce(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
 
 // Parse reads an issue file and returns an Issue
 func Parse(filePath string) (*Issue, error) {
@@ -27,13 +77,45 @@ func ParseBytes(data []byte, filePath string) (*Issue, error) {
 		return nil, fmt.Errorf("failed to parse frontmatter: %w", err)
 	}
 
-	var issue Issue
-	if err := yaml.Unmarshal(frontmatter, &issue); err != nil {
+	// Parse into intermediate struct that supports both field naming conventions
+	var raw rawFrontmatter
+	if err := yaml.Unmarshal(frontmatter, &raw); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal frontmatter: %w", err)
 	}
 
-	issue.Body = body
-	issue.FilePath = filePath
+	// Convert to Issue struct
+	issue := Issue{
+		Number:    raw.Number,
+		Title:     raw.Title,
+		State:     raw.State,
+		Labels:    raw.Labels,
+		Assignees: raw.Assignees,
+		Body:      body,
+		FilePath:  filePath,
+	}
+
+	// Parse created time (prefer created_at, fallback to created)
+	createdStr := coalesce(raw.CreatedAt, raw.Created)
+	if createdStr != "" {
+		if t, err := parseFlexibleTime(createdStr); err == nil {
+			issue.CreatedAt = t
+		}
+	}
+
+	// Parse updated time (prefer updated_at, fallback to updated)
+	updatedStr := coalesce(raw.UpdatedAt, raw.Updated)
+	if updatedStr != "" {
+		if t, err := parseFlexibleTime(updatedStr); err == nil {
+			issue.UpdatedAt = t
+		}
+	}
+
+	// Parse closed time
+	if raw.ClosedAt != "" {
+		if t, err := parseFlexibleTime(raw.ClosedAt); err == nil {
+			issue.ClosedAt = &t
+		}
+	}
 
 	return &issue, nil
 }
