@@ -8,22 +8,35 @@ import (
 	"strings"
 
 	"github.com/itda-work/zap/internal/issue"
+	"github.com/itda-work/zap/internal/project"
 )
 
 // Handler handles HTTP requests
 type Handler struct {
-	store *issue.Store
+	store      *issue.Store          // For single-project mode
+	multiStore *project.MultiStore   // For multi-project mode
 }
 
-// NewHandler creates a new Handler
+// NewHandler creates a new Handler for single-project mode
 func NewHandler(store *issue.Store) *Handler {
 	return &Handler{store: store}
+}
+
+// NewMultiHandler creates a new Handler for multi-project mode
+func NewMultiHandler(multiStore *project.MultiStore) *Handler {
+	return &Handler{multiStore: multiStore}
+}
+
+// IsMultiProject returns true if this is a multi-project handler
+func (h *Handler) IsMultiProject() bool {
+	return h.multiStore != nil
 }
 
 // Dashboard serves the main dashboard page
 func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	// Parse state filter from query
 	stateFilter := r.URL.Query().Get("state")
+	projectFilter := r.URL.Query().Get("project")
 
 	var states []issue.State
 	if stateFilter != "" {
@@ -37,6 +50,13 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		states = issue.ActiveStates()
 	}
 
+	// Handle multi-project mode
+	if h.IsMultiProject() {
+		h.multiProjectDashboard(w, r, states, stateFilter, projectFilter)
+		return
+	}
+
+	// Single-project mode
 	issues, err := h.store.List(states...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -57,6 +77,51 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := RenderDashboard(w, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// multiProjectDashboard handles dashboard for multi-project mode
+func (h *Handler) multiProjectDashboard(w http.ResponseWriter, r *http.Request, states []issue.State, stateFilter, projectFilter string) {
+	projectIssues, err := h.multiStore.ListAll(states...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Apply project filter if specified
+	if projectFilter != "" {
+		var filtered []*project.ProjectIssue
+		for _, pIss := range projectIssues {
+			if pIss.Project == projectFilter {
+				filtered = append(filtered, pIss)
+			}
+		}
+		projectIssues = filtered
+	}
+
+	stats, err := h.multiStore.Stats()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Get list of project names for filter dropdown
+	var projectNames []string
+	for _, proj := range h.multiStore.Projects() {
+		projectNames = append(projectNames, proj.Alias)
+	}
+
+	data := &MultiDashboardData{
+		Issues:        projectIssues,
+		Stats:         stats,
+		StateFilter:   stateFilter,
+		ProjectFilter: projectFilter,
+		Projects:      projectNames,
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := RenderMultiDashboard(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

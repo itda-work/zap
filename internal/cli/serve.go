@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/itda-work/zap/internal/issue"
+	"github.com/itda-work/zap/internal/project"
 	"github.com/itda-work/zap/internal/web"
 	"github.com/spf13/cobra"
 )
@@ -71,6 +72,12 @@ func init() {
 }
 
 func runServe(cmd *cobra.Command, args []string) error {
+	// Check for multi-project mode
+	if isMultiProjectMode(cmd) {
+		return runMultiProjectServe(cmd)
+	}
+
+	// Single project mode
 	dir, err := getIssuesDir(cmd)
 	if err != nil {
 		return err
@@ -92,6 +99,62 @@ func runServe(cmd *cobra.Command, args []string) error {
 	}
 
 	return startForeground(dir)
+}
+
+func runMultiProjectServe(cmd *cobra.Command) error {
+	multiStore, err := getMultiStore(cmd)
+	if err != nil {
+		return err
+	}
+
+	// Validate all project directories exist
+	for _, proj := range multiStore.Projects() {
+		if _, err := os.Stat(proj.Store.BaseDir()); os.IsNotExist(err) {
+			return fmt.Errorf("issues directory not found for project %s: %s", proj.Alias, proj.Store.BaseDir())
+		}
+	}
+
+	// For daemon mode with multi-project, we'd need more complex handling
+	// For now, just support foreground mode
+	if serveDaemon {
+		return fmt.Errorf("daemon mode is not yet supported with multiple projects")
+	}
+
+	return startMultiProjectForeground(multiStore)
+}
+
+func startMultiProjectForeground(multiStore *project.MultiStore) error {
+	server := web.NewMultiServer(multiStore, servePort)
+
+	// Setup context for graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Handle interrupt signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		fmt.Println("\nShutting down server...")
+		cancel()
+	}()
+
+	// Print project info
+	fmt.Printf("Starting Zap web server on http://localhost:%d\n", servePort)
+	fmt.Printf("Projects: ")
+	for i, proj := range multiStore.Projects() {
+		if i > 0 {
+			fmt.Print(", ")
+		}
+		fmt.Print(proj.Alias)
+	}
+	fmt.Println()
+	fmt.Println("Press Ctrl+C to stop")
+
+	if serveNoBrowser {
+		return server.Start(ctx)
+	}
+	return server.StartAndOpen(ctx, "/")
 }
 
 func startForeground(dir string) error {

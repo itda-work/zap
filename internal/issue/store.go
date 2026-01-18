@@ -29,6 +29,11 @@ func NewStore(baseDir string) *Store {
 	return &Store{baseDir: baseDir}
 }
 
+// BaseDir returns the base directory for the store
+func (s *Store) BaseDir() string {
+	return s.baseDir
+}
+
 // Warnings returns parse failures from the last List operation.
 func (s *Store) Warnings() []ParseFailure {
 	return s.warnings

@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/itda-work/zap/internal/issue"
+	"github.com/itda-work/zap/internal/project"
 	"github.com/spf13/cobra"
 )
 
@@ -68,6 +70,7 @@ func getProjectDir(cmd *cobra.Command) (string, error) {
 }
 
 // getIssuesDir returns the issues directory path, combining -C and -d flags
+// This is used for single-project mode (backward compatibility)
 func getIssuesDir(cmd *cobra.Command) (string, error) {
 	projectDir, err := getProjectDir(cmd)
 	if err != nil {
@@ -80,4 +83,50 @@ func getIssuesDir(cmd *cobra.Command) (string, error) {
 		return filepath.Join(projectDir, issuesDir), nil
 	}
 	return issuesDir, nil
+}
+
+// getProjectSpecs parses -C flags into ProjectSpec list
+// Returns nil if no -C flags are provided
+func getProjectSpecs(cmd *cobra.Command) []project.ProjectSpec {
+	projectDirs, _ := cmd.Flags().GetStringArray("project")
+	if len(projectDirs) == 0 {
+		return nil
+	}
+
+	specs := make([]project.ProjectSpec, 0, len(projectDirs))
+	for _, dir := range projectDirs {
+		spec := project.ParseProjectSpec(dir)
+		// Expand tilde in the path part
+		spec.Path = expandTilde(spec.Path)
+		specs = append(specs, spec)
+	}
+	return specs
+}
+
+// isMultiProjectMode returns true if multiple -C flags are provided
+func isMultiProjectMode(cmd *cobra.Command) bool {
+	projectDirs, _ := cmd.Flags().GetStringArray("project")
+	return len(projectDirs) > 1
+}
+
+// getMultiStore creates a MultiStore from -C flags
+// Returns nil if in single-project mode
+func getMultiStore(cmd *cobra.Command) (*project.MultiStore, error) {
+	specs := getProjectSpecs(cmd)
+	if len(specs) <= 1 {
+		return nil, nil // Single project mode
+	}
+
+	issuesDir, _ := cmd.Flags().GetString("dir")
+	return project.NewMultiStore(specs, issuesDir)
+}
+
+// getStore returns an issue.Store for single-project mode
+// This is the existing behavior for backward compatibility
+func getStore(cmd *cobra.Command) (*issue.Store, error) {
+	dir, err := getIssuesDir(cmd)
+	if err != nil {
+		return nil, err
+	}
+	return issue.NewStore(dir), nil
 }

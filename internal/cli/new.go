@@ -13,6 +13,7 @@ import (
 	"unicode"
 
 	"github.com/itda-work/zap/internal/issue"
+	"github.com/itda-work/zap/internal/project"
 	"github.com/spf13/cobra"
 	"golang.org/x/text/unicode/norm"
 )
@@ -42,6 +43,7 @@ var (
 	newBody      string
 	newEditor    bool
 	newState     string
+	newProject   string
 )
 
 func init() {
@@ -52,6 +54,7 @@ func init() {
 	newCmd.Flags().StringVarP(&newBody, "body", "b", "", "Issue body content")
 	newCmd.Flags().BoolVarP(&newEditor, "editor", "e", false, "Open editor to write issue body")
 	newCmd.Flags().StringVarP(&newState, "state", "s", "open", "Initial state (open, in-progress, done, closed)")
+	newCmd.Flags().StringVarP(&newProject, "project", "p", "", "Project alias (required for multi-project mode)")
 }
 
 func runNew(cmd *cobra.Command, args []string) error {
@@ -66,6 +69,28 @@ func runNew(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid state: %s (valid: open, in-progress, done, closed)", newState)
 	}
 
+	// Check for multi-project mode
+	if isMultiProjectMode(cmd) {
+		// Multi-project mode requires --project flag
+		if newProject == "" {
+			return fmt.Errorf("--project flag is required when using multiple -C flags")
+		}
+
+		multiStore, err := getMultiStore(cmd)
+		if err != nil {
+			return err
+		}
+
+		proj, ok := multiStore.GetProject(newProject)
+		if !ok {
+			return fmt.Errorf("project not found: %s", newProject)
+		}
+
+		issuesDir, _ := cmd.Flags().GetString("dir")
+		return createIssueInProject(proj, issuesDir, title, state)
+	}
+
+	// Single project mode (existing behavior)
 	dir, err := getIssuesDir(cmd)
 	if err != nil {
 		return err
@@ -295,4 +320,79 @@ func openEditor(initialContent string) (string, error) {
 	}
 
 	return string(content), nil
+}
+
+// createIssueInProject creates an issue in a specific project
+func createIssueInProject(proj *project.Project, issuesDir string, title string, state issue.State) error {
+	dir := proj.IssuesDir(issuesDir)
+
+	// Ensure issues directory exists
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create issues directory: %w", err)
+	}
+
+	store := issue.NewStore(dir)
+
+	// Find next issue number
+	nextNumber, err := findNextIssueNumber(store)
+	if err != nil {
+		return fmt.Errorf("failed to determine next issue number: %w", err)
+	}
+
+	// Determine body content
+	body := newBody
+
+	// Check for stdin input (piped content)
+	if body == "" && !newEditor {
+		stat, err := os.Stdin.Stat()
+		if err == nil && (stat.Mode()&os.ModeNamedPipe) != 0 {
+			scanner := bufio.NewScanner(os.Stdin)
+			var lines []string
+			for scanner.Scan() {
+				lines = append(lines, scanner.Text())
+			}
+			body = strings.Join(lines, "\n")
+		}
+	}
+
+	// Open editor if requested
+	if newEditor {
+		editedBody, err := openEditor(body)
+		if err != nil {
+			return fmt.Errorf("failed to open editor: %w", err)
+		}
+		body = editedBody
+	}
+
+	// Create issue struct
+	now := time.Now()
+	iss := &issue.Issue{
+		Number:    nextNumber,
+		Title:     title,
+		State:     state,
+		Labels:    newLabels,
+		Assignees: newAssignees,
+		CreatedAt: now,
+		UpdatedAt: now,
+		Body:      strings.TrimSpace(body),
+	}
+
+	// Generate filename
+	slug := generateSlug(title)
+	filename := fmt.Sprintf("%03d-%s.md", nextNumber, slug)
+	filePath := filepath.Join(dir, filename)
+
+	// Serialize issue
+	data, err := issue.Serialize(iss)
+	if err != nil {
+		return fmt.Errorf("failed to serialize issue: %w", err)
+	}
+
+	// Write file
+	if err := os.WriteFile(filePath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write issue file: %w", err)
+	}
+
+	fmt.Printf("✅ Created %s/#%d: %s\n", proj.Alias, nextNumber, filename)
+	return nil
 }

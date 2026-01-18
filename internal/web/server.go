@@ -16,14 +16,16 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/itda-work/zap/internal/issue"
+	"github.com/itda-work/zap/internal/project"
 )
 
 // Server is the web server for the issue viewer
 type Server struct {
-	store   *issue.Store
-	baseDir string
-	port    int
-	handler *Handler
+	store      *issue.Store           // For single-project mode
+	multiStore *project.MultiStore    // For multi-project mode
+	baseDirs   []string               // Directories to watch
+	port       int
+	handler    *Handler
 
 	// SSE client management
 	clients   map[chan string]bool
@@ -36,15 +38,37 @@ type Server struct {
 	requestCount uint64
 }
 
-// NewServer creates a new web server
+// NewServer creates a new web server for single-project mode
 func NewServer(store *issue.Store, baseDir string, port int) *Server {
 	return &Server{
-		store:   store,
-		baseDir: baseDir,
-		port:    port,
-		handler: NewHandler(store),
-		clients: make(map[chan string]bool),
+		store:    store,
+		baseDirs: []string{baseDir},
+		port:     port,
+		handler:  NewHandler(store),
+		clients:  make(map[chan string]bool),
 	}
+}
+
+// NewMultiServer creates a new web server for multi-project mode
+func NewMultiServer(multiStore *project.MultiStore, port int) *Server {
+	// Collect all base directories for watching
+	var baseDirs []string
+	for _, proj := range multiStore.Projects() {
+		baseDirs = append(baseDirs, proj.Store.BaseDir())
+	}
+
+	return &Server{
+		multiStore: multiStore,
+		baseDirs:   baseDirs,
+		port:       port,
+		handler:    NewMultiHandler(multiStore),
+		clients:    make(map[chan string]bool),
+	}
+}
+
+// IsMultiProject returns true if this is a multi-project server
+func (s *Server) IsMultiProject() bool {
+	return s.multiStore != nil
 }
 
 // Start starts the web server
@@ -57,9 +81,11 @@ func (s *Server) Start(ctx context.Context) error {
 	}
 	defer s.watcher.Close()
 
-	// Watch the issues directory
-	if err := s.watcher.Add(s.baseDir); err != nil {
-		return fmt.Errorf("failed to watch directory: %w", err)
+	// Watch all issues directories
+	for _, baseDir := range s.baseDirs {
+		if err := s.watcher.Add(baseDir); err != nil {
+			log.Printf("Warning: failed to watch directory %s: %v", baseDir, err)
+		}
 	}
 
 	// Start watching for file changes

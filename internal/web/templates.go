@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/itda-work/zap/internal/issue"
+	"github.com/itda-work/zap/internal/project"
 )
 
 //go:embed templates/*.html
@@ -17,12 +18,13 @@ var templates *template.Template
 
 func init() {
 	funcMap := template.FuncMap{
-		"formatTime":   formatTime,
-		"formatDate":   formatDate,
-		"stateClass":   stateClass,
-		"stateIcon":    stateIcon,
-		"stateCount":   stateCount,
-		"displayState": displayState,
+		"formatTime":      formatTime,
+		"formatDate":      formatDate,
+		"stateClass":      stateClass,
+		"stateIcon":       stateIcon,
+		"stateCount":      stateCount,
+		"multiStateCount": multiStateCount,
+		"displayState":    displayState,
 		"renderMarkdown": func(md string) template.HTML {
 			html, err := RenderHTML(md)
 			if err != nil {
@@ -51,11 +53,25 @@ func RenderIssuePage(w io.Writer, data *IssuePageData) error {
 	return templates.ExecuteTemplate(w, "issue.html", data)
 }
 
+// RenderMultiDashboard renders the multi-project dashboard page
+func RenderMultiDashboard(w io.Writer, data *MultiDashboardData) error {
+	return templates.ExecuteTemplate(w, "multi_dashboard.html", data)
+}
+
 // DashboardData holds data for the dashboard template
 type DashboardData struct {
 	Issues      []*issue.Issue
 	Stats       *issue.Stats
 	StateFilter string
+}
+
+// MultiDashboardData holds data for the multi-project dashboard template
+type MultiDashboardData struct {
+	Issues        []*project.ProjectIssue
+	Stats         *project.MultiStats
+	StateFilter   string
+	ProjectFilter string
+	Projects      []string // Available project names for filter dropdown
 }
 
 // IssuePageData holds data for the issue page template
@@ -118,4 +134,22 @@ func displayState(s issue.State) string {
 		return "wip"
 	}
 	return string(s)
+}
+
+// multiStateCount returns the total count for a state across all projects
+func multiStateCount(stats *project.MultiStats, state string) int {
+	if stats == nil || stats.ByProject == nil {
+		return 0
+	}
+	s, ok := issue.ParseState(state)
+	if !ok {
+		return 0
+	}
+	total := 0
+	for _, projStats := range stats.ByProject {
+		if projStats != nil && projStats.ByState != nil {
+			total += projStats.ByState[s]
+		}
+	}
+	return total
 }
