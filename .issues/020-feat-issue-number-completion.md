@@ -6,7 +6,7 @@ labels:
     - enhancement
     - cli
 assignees: []
-created_at: 2026-01-17T00:00:00Z
+created_at: 2026-01-17T10:40:03Z
 updated_at: 2026-01-17T10:39:48.183091+09:00
 closed_at: 2026-01-17T10:39:48.183092+09:00
 ---

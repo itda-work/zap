@@ -6,8 +6,8 @@ labels:
     - feature
 assignees:
     - allieus
-created_at: 2026-01-15T00:00:00Z
-updated_at: 2026-01-15T00:00:00Z
+created_at: 2026-01-16T08:17:30Z
+updated_at: 2026-01-16T23:29:56Z
 ---
 
 ## 개요

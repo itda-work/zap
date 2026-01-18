@@ -7,8 +7,8 @@ labels:
     - cli
 assignees:
     - allieus
-created_at: 2026-01-16T00:00:00Z
-updated_at: 2026-01-16T00:00:00Z
+created_at: 2026-01-16T09:08:28Z
+updated_at: 2026-01-16T23:29:56Z
 ---
 
 ## 개요

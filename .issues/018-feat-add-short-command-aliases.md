@@ -7,7 +7,7 @@ labels:
     - cli
     - ux
 assignees: []
-created_at: 2026-01-16T00:00:00Z
+created_at: 2026-01-16T23:29:56Z
 updated_at: 2026-01-17T10:15:24.560522+09:00
 closed_at: 2026-01-17T10:15:24.560522+09:00
 ---

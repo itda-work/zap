@@ -6,8 +6,8 @@ labels:
     - bug
     - cli
 assignees: []
-created_at: 2026-01-16T00:00:00Z
-updated_at: 2026-01-16T00:00:00Z
+created_at: 2026-01-16T19:44:06Z
+updated_at: 2026-01-16T23:29:56Z
 ---
 
 ## 문제
