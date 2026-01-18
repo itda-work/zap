@@ -2,6 +2,7 @@
 /zap
 /zap-*
 /dist/
+/.issues/.zap-serve.*
 
 # IDE
 .idea/
