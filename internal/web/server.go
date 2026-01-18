@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -230,9 +232,14 @@ func (s *Server) watchFiles() {
 				return
 			}
 
-			// Only react to write/create/remove events on markdown files
+			// Only react to write/create/remove events on issue files (.md, .rst)
+			// Skip hidden files and other files to avoid infinite reload loops
 			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) || event.Has(fsnotify.Remove) {
-				debounce.Reset(100 * time.Millisecond)
+				filename := filepath.Base(event.Name)
+				isIssueFile := strings.HasSuffix(filename, ".md") || strings.HasSuffix(filename, ".rst")
+				if !strings.HasPrefix(filename, ".") && isIssueFile {
+					debounce.Reset(100 * time.Millisecond)
+				}
 			}
 
 		case <-debounce.C:
