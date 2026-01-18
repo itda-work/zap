@@ -222,9 +222,7 @@ func startDaemon(cmd *cobra.Command, dir string) error {
 	process := exec.Command(executable, args...)
 	process.Stdout = log
 	process.Stderr = log
-	process.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true, // Create new process group
-	}
+	setSysProcAttr(process)
 
 	if err := process.Start(); err != nil {
 		log.Close()
