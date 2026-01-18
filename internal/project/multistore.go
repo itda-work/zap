@@ -79,12 +79,9 @@ func (ms *MultiStore) ListAll(states ...issue.State) ([]*ProjectIssue, error) {
 		}
 	}
 
-	// Sort by project alias, then by number
+	// Sort by created_at descending (newest first)
 	sort.Slice(allIssues, func(i, j int) bool {
-		if allIssues[i].Project != allIssues[j].Project {
-			return allIssues[i].Project < allIssues[j].Project
-		}
-		return allIssues[i].Number < allIssues[j].Number
+		return allIssues[i].CreatedAt.After(allIssues[j].CreatedAt)
 	})
 
 	return allIssues, nil

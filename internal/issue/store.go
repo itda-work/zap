@@ -104,9 +104,9 @@ func (s *Store) List(states ...State) ([]*Issue, error) {
 		}
 		s.warnings = flatFailures
 
-		// Sort by number
+		// Sort by created_at descending (newest first)
 		sort.Slice(filtered, func(i, j int) bool {
-			return filtered[i].Number < filtered[j].Number
+			return filtered[i].CreatedAt.After(filtered[j].CreatedAt)
 		})
 
 		return filtered, nil
@@ -129,9 +129,9 @@ func (s *Store) List(states ...State) ([]*Issue, error) {
 		s.warnings = append(s.warnings, failures...)
 	}
 
-	// 번호로 정렬
+	// Sort by created_at descending (newest first)
 	sort.Slice(issues, func(i, j int) bool {
-		return issues[i].Number < issues[j].Number
+		return issues[i].CreatedAt.After(issues[j].CreatedAt)
 	})
 
 	return issues, nil
