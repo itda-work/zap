@@ -57,4 +57,11 @@ release: build-all
 		git tag -a $(TAG) -m "Release $(TAG)"; \
 		git push origin $(TAG); \
 	fi
-	gh release create $(TAG) $(DIST)/* --title "$(TAG)" --generate-notes
+	@echo "Generating release notes..."
+	@PREV_TAG=$$(git describe --tags --abbrev=0 $(TAG)^ 2>/dev/null || echo ""); \
+	if [ -n "$$PREV_TAG" ]; then \
+		./$(BINARY) release-notes "$$PREV_TAG" $(TAG) > $(DIST)/release-notes.md; \
+	else \
+		./$(BINARY) release-notes $(TAG) > $(DIST)/release-notes.md; \
+	fi
+	gh release create $(TAG) $(DIST)/* --title "$(TAG)" --notes-file $(DIST)/release-notes.md
