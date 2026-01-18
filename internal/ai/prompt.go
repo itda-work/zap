@@ -74,6 +74,39 @@ func renderTemplate(tmplStr string, vars map[string]string) (string, error) {
 
 // builtinTemplates contains the default prompt templates.
 var builtinTemplates = map[string]*PromptTemplate{
+	"verify-renumber": {
+		Name:        "verify-renumber",
+		Description: "Verify that renumbering an issue is safe by checking references",
+		System: `You are an issue management assistant helping to verify number conflict resolution.
+Your task is to analyze whether renumbering an issue is safe by checking if other issues reference it.`,
+		User: `We are about to renumber an issue. Please verify this is the correct action.
+
+CONFLICT DETAILS:
+- Conflict type: {{.conflict_type}}
+- File to renumber: {{.filename}}
+- Current number: {{.current_number}}
+- New number: {{.new_number}}
+- Reason: {{.reason}}
+
+FILE CONTENT:
+{{.file_content}}
+
+ALL ISSUES IN PROJECT:
+{{.all_issues}}
+
+ANALYSIS REQUIRED:
+1. Check if any other issues reference #{{.current_number}}
+2. Verify this is the correct file to renumber (should be the later-created one)
+3. Confirm the new number {{.new_number}} is not already in use
+
+RESPOND WITH EXACTLY ONE OF:
+- "SAFE: <brief explanation>" if renumbering is safe
+- "WARNING: <explanation of concern>" if there are potential issues but can proceed
+- "UNSAFE: <explanation>" if renumbering would cause problems
+
+Keep your response concise (1-2 sentences).`,
+		Variables: []string{"conflict_type", "filename", "current_number", "new_number", "reason", "file_content", "all_issues"},
+	},
 	"repair-frontmatter": {
 		Name:        "repair-frontmatter",
 		Description: "Repair malformed YAML frontmatter in issue files",
