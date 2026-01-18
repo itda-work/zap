@@ -183,19 +183,44 @@ func (h *Handler) GetIssue(w http.ResponseWriter, r *http.Request) {
 
 // ViewIssue renders a single issue as HTML
 func (h *Handler) ViewIssue(w http.ResponseWriter, r *http.Request) {
-	// Extract number from /issues/:number/view
+	// Extract from path: /issues/:number/view or /issues/:project/:number/view
 	path := strings.TrimPrefix(r.URL.Path, "/issues/")
 	path = strings.TrimSuffix(path, "/view")
-	number, err := strconv.Atoi(path)
-	if err != nil {
-		http.Error(w, "Invalid issue number", http.StatusBadRequest)
-		return
-	}
 
-	iss, err := h.store.Get(number)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
+	var iss *issue.Issue
+
+	if h.IsMultiProject() {
+		// Multi-project mode: /issues/:project/:number/view
+		parts := strings.Split(path, "/")
+		if len(parts) != 2 {
+			http.Error(w, "Invalid path format", http.StatusBadRequest)
+			return
+		}
+		projectAlias := parts[0]
+		number, err := strconv.Atoi(parts[1])
+		if err != nil {
+			http.Error(w, "Invalid issue number", http.StatusBadRequest)
+			return
+		}
+		projIssue, err := h.multiStore.Get(projectAlias, number)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		iss = projIssue.Issue
+	} else {
+		// Single-project mode: /issues/:number/view
+		number, err := strconv.Atoi(path)
+		if err != nil {
+			http.Error(w, "Invalid issue number", http.StatusBadRequest)
+			return
+		}
+		var err2 error
+		iss, err2 = h.store.Get(number)
+		if err2 != nil {
+			http.Error(w, err2.Error(), http.StatusNotFound)
+			return
+		}
 	}
 
 	htmlBody, _ := RenderHTML(iss.Body)
