@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,6 +15,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/fsnotify/fsnotify"
 	"github.com/itda-work/zap/internal/issue"
+	"github.com/itda-work/zap/internal/web"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +34,8 @@ var (
 	showRefs   bool
 	showWatch  bool
 	showNotify bool
+	showWeb    bool
+	showPort   int
 )
 
 func init() {
@@ -41,6 +45,8 @@ func init() {
 	showCmd.Flags().BoolVar(&showRefs, "refs", false, "Show referenced issues graph")
 	showCmd.Flags().BoolVarP(&showWatch, "watch", "w", false, "Watch for file changes (like tail -f)")
 	showCmd.Flags().BoolVar(&showNotify, "notify", false, "Send system notification when state changes to done (requires -w)")
+	showCmd.Flags().BoolVar(&showWeb, "web", false, "Open issue in web browser")
+	showCmd.Flags().IntVar(&showPort, "port", 18080, "Port for web server (used with --web)")
 }
 
 func runShow(cmd *cobra.Command, args []string) error {
@@ -60,11 +66,37 @@ func runShow(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if showWeb {
+		return showIssueInBrowser(store, dir, iss.Number)
+	}
+
 	if showWatch {
 		return watchIssue(store, iss)
 	}
 
 	return displayIssue(store, iss)
+}
+
+func showIssueInBrowser(store *issue.Store, dir string, number int) error {
+	server := web.NewServer(store, dir, showPort)
+
+	// Setup context for graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Handle interrupt signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		fmt.Println("\nShutting down server...")
+		cancel()
+	}()
+
+	fmt.Printf("Starting Zap web server on http://localhost:%d\n", showPort)
+	fmt.Println("Press Ctrl+C to stop")
+
+	return server.StartAndOpen(ctx, fmt.Sprintf("/issues/%d/view", number))
 }
 
 func displayIssue(store *issue.Store, iss *issue.Issue) error {

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>#{{.Issue.Number}} {{.Issue.Title}} - Zap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        /* GitHub-style markdown */
+        .markdown-body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        .markdown-body h1 { font-size: 2em; border-bottom: 1px solid #d1d5db; padding-bottom: 0.3em; }
+        .markdown-body h2 { font-size: 1.5em; border-bottom: 1px solid #d1d5db; padding-bottom: 0.3em; }
+        .markdown-body h3 { font-size: 1.25em; }
+        .markdown-body h4 { font-size: 1em; }
+        .markdown-body p { margin-bottom: 1rem; }
+        .markdown-body ul, .markdown-body ol { padding-left: 2em; margin-bottom: 1rem; }
+        .markdown-body li { margin-bottom: 0.25rem; }
+        .markdown-body code {
+            background-color: rgba(175, 184, 193, 0.2);
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            font-size: 85%;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        .markdown-body pre code { background: none; padding: 0; }
+        .markdown-body blockquote {
+            padding: 0 1em;
+            color: #656d76;
+            border-left: 0.25em solid #d0d7de;
+            margin-bottom: 1rem;
+        }
+        .markdown-body table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+        .markdown-body th, .markdown-body td { padding: 0.5rem 1rem; border: 1px solid #d0d7de; }
+        .markdown-body th { background-color: #f6f8fa; font-weight: 600; }
+        .markdown-body a { color: #0969da; text-decoration: none; }
+        .markdown-body a:hover { text-decoration: underline; }
+        .markdown-body img { max-width: 100%; }
+        .markdown-body hr { height: 0.25em; padding: 0; margin: 1.5rem 0; background-color: #d0d7de; border: 0; }
+        .markdown-body input[type="checkbox"] { margin-right: 0.5rem; }
+
+        /* Dark mode adjustments */
+        .dark .markdown-body { color: #e4e4e7; }
+        .dark .markdown-body h1, .dark .markdown-body h2 { border-bottom-color: #3f3f46; }
+        .dark .markdown-body code { background-color: rgba(99, 102, 106, 0.4); }
+        .dark .markdown-body pre { background-color: #27272a; }
+        .dark .markdown-body blockquote { color: #a1a1aa; border-left-color: #52525b; }
+        .dark .markdown-body th, .dark .markdown-body td { border-color: #3f3f46; }
+        .dark .markdown-body th { background-color: #27272a; }
+        .dark .markdown-body a { color: #58a6ff; }
+        .dark .markdown-body hr { background-color: #3f3f46; }
+
+        /* Syntax highlighting */
+        {{chromaCSS}}
+
+        /* Dark mode for syntax highlighting */
+        .dark .chroma { background-color: #27272a !important; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-zinc-900 min-h-screen transition-colors">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-8">
+            <a href="/" class="flex items-center gap-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span class="font-medium">Back to Dashboard</span>
+            </a>
+            <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 dark:bg-zinc-700 hover:bg-gray-300 dark:hover:bg-zinc-600 transition-colors">
+                <svg class="w-5 h-5 text-gray-700 dark:text-gray-200 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <svg class="w-5 h-5 text-gray-700 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Issue Card -->
+        <article class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden">
+            <!-- Issue Header -->
+            <div class="p-6 border-b border-gray-200 dark:border-zinc-700">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-gray-400 dark:text-gray-500 font-mono">#{{.Issue.Number}}</span>
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium {{stateClass .Issue.State}}">
+                        {{.Issue.State}}
+                    </span>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">{{.Issue.Title}}</h1>
+
+                <!-- Metadata -->
+                <div class="flex flex-wrap gap-6 text-sm text-gray-600 dark:text-gray-400">
+                    {{if .Issue.Labels}}
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                        <div class="flex flex-wrap gap-1">
+                            {{range .Issue.Labels}}
+                            <span class="px-2 py-0.5 bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-gray-300 rounded-full text-xs">{{.}}</span>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+
+                    {{if .Issue.Assignees}}
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <span>{{join .Issue.Assignees ", "}}</span>
+                    </div>
+                    {{end}}
+
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span>Created {{formatTime .Issue.CreatedAt}}</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Updated {{formatTime .Issue.UpdatedAt}}</span>
+                    </div>
+
+                    {{if .Issue.ClosedAt}}
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Closed {{formatTime .Issue.ClosedAt}}</span>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+
+            <!-- Issue Body -->
+            {{if .HTMLBody}}
+            <div class="p-6">
+                <div class="markdown-body text-gray-700 dark:text-gray-300">
+                    {{.HTMLBody}}
+                </div>
+            </div>
+            {{end}}
+        </article>
+
+        <!-- File Path Info -->
+        <div class="mt-4 text-sm text-gray-500 dark:text-gray-500">
+            <code class="bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded">{{.Issue.FilePath}}</code>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+
+        function setTheme(dark) {
+            if (dark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Initialize theme
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            setTheme(true);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            setTheme(!document.documentElement.classList.contains('dark'));
+        });
+
+        // SSE for live reload
+        let eventSource = null;
+
+        function connectSSE() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            eventSource = new EventSource('/events');
+            eventSource.onmessage = function(event) {
+                if (event.data === 'reload') {
+                    location.reload();
+                }
+            };
+            eventSource.onerror = function() {
+                console.log('SSE connection error, will retry...');
+            };
+        }
+
+        // Connect SSE
+        connectSSE();
+
+        // Clean up SSE on page unload
+        window.addEventListener('beforeunload', () => {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        });
+
+        // Also clean up when page becomes hidden (for mobile/tab switching)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && eventSource) {
+                eventSource.close();
+                eventSource = null;
+            } else if (!document.hidden && !eventSource) {
+                connectSSE();
+            }
+        });
+    </script>
+</body>
+</html>
