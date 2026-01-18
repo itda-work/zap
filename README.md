@@ -45,11 +45,11 @@ zap list --label bug        # 레이블 필터
 zap show 1                  # 이슈 #1 상세
 zap show 1 --raw            # 원본 마크다운
 
-# 상태 변경
-zap open 1                  # → open/
-zap start 1                 # → in-progress/
-zap done 1                  # → done/
-zap close 1                 # → closed/ (취소/보류)
+# 상태 변경 (frontmatter state 필드 업데이트)
+zap open 1                  # state: open
+zap start 1                 # state: in-progress
+zap done 1                  # state: done
+zap close 1                 # state: closed (취소/보류)
 
 # 검색 & 통계
 zap search "키워드"          # 제목/내용 검색
@@ -69,15 +69,17 @@ zap init claude --path AI_GUIDE.md  # 지정 파일에 생성
 
 ## 이슈 파일 형식
 
-`.issues/` 디렉토리 구조:
+`.issues/` 디렉토리 구조 (평면 구조):
 
 ```
 .issues/
-├── open/           # 새로 생성된 이슈
-├── in-progress/    # 진행 중
-├── done/           # 완료
-└── closed/         # 취소/보류
+├── 001-feat-some-feature.md     # state: open
+├── 002-fix-some-bug.md          # state: in-progress
+├── 003-feat-completed.md        # state: done
+└── 004-cancelled-task.md        # state: closed
 ```
+
+이슈 상태는 파일의 YAML frontmatter에 있는 `state` 필드로 결정됩니다.
 
 이슈 파일 (`001-feature-name.md`):
 
