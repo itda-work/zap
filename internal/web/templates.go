@@ -22,6 +22,7 @@ func init() {
 		"stateClass":   stateClass,
 		"stateIcon":    stateIcon,
 		"stateCount":   stateCount,
+		"displayState": displayState,
 		"renderMarkdown": func(md string) template.HTML {
 			html, err := RenderHTML(md)
 			if err != nil {
@@ -110,4 +111,11 @@ func stateCount(stats *issue.Stats, state string) int {
 		return 0
 	}
 	return stats.ByState[s]
+}
+
+func displayState(s issue.State) string {
+	if s == issue.StateInProgress {
+		return "wip"
+	}
+	return string(s)
 }

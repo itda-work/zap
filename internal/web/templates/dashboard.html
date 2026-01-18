@@ -103,8 +103,8 @@
                 <div class="text-2xl font-bold text-gray-900 dark:text-white">{{stateCount .Stats "open"}}</div>
             </div>
             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-zinc-700">
-                <div class="text-sm text-yellow-600 dark:text-yellow-400">In Progress</div>
-                <div class="text-2xl font-bold text-gray-900 dark:text-white">{{stateCount .Stats "in-progress"}}</div>
+                <div class="text-sm text-yellow-600 dark:text-yellow-400">WIP</div>
+                <div class="text-2xl font-bold text-gray-900 dark:text-white">{{stateCount .Stats "wip"}}</div>
             </div>
             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-zinc-700">
                 <div class="text-sm text-green-600 dark:text-green-400">Done</div>
@@ -120,8 +120,8 @@
             <a href="/?state=open" class="px-4 py-2 rounded-lg text-sm font-medium {{if eq .StateFilter "open"}}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200{{else}}text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800{{end}} transition-colors">
                 Open
             </a>
-            <a href="/?state=in-progress" class="px-4 py-2 rounded-lg text-sm font-medium {{if eq .StateFilter "in-progress"}}bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200{{else}}text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800{{end}} transition-colors">
-                In Progress
+            <a href="/?state=wip" class="px-4 py-2 rounded-lg text-sm font-medium {{if eq .StateFilter "wip"}}bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200{{else}}text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800{{end}} transition-colors">
+                WIP
             </a>
             <a href="/?state=done" class="px-4 py-2 rounded-lg text-sm font-medium {{if eq .StateFilter "done"}}bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200{{else}}text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800{{end}} transition-colors">
                 Done
@@ -140,7 +140,7 @@
                         <div class="flex items-center gap-2 mb-1">
                             <span class="text-gray-400 dark:text-gray-500 text-sm font-mono">#{{.Number}}</span>
                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium {{stateClass .State}}">
-                                {{.State}}
+                                {{displayState .State}}
                             </span>
                         </div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{.Title}}</h3>

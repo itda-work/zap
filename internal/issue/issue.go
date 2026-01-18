@@ -57,7 +57,7 @@ func ParseState(s string) (State, bool) {
 	switch s {
 	case "open":
 		return StateOpen, true
-	case "in-progress":
+	case "in-progress", "wip":
 		return StateInProgress, true
 	case "done":
 		return StateDone, true

@@ -10,6 +10,7 @@ func TestParseState(t *testing.T) {
 	}{
 		{"open", StateOpen, true},
 		{"in-progress", StateInProgress, true},
+		{"wip", StateInProgress, true},
 		{"done", StateDone, true},
 		{"closed", StateClosed, true},
 		{"invalid", "", false},
