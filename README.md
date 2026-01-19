@@ -36,7 +36,7 @@ make install
 
 ```bash
 # 이슈 목록
-zap list                    # 활성 이슈 (open + in-progress)
+zap list                    # 활성 이슈 (open + wip)
 zap list --all              # 전체 이슈
 zap list --state done       # 특정 상태
 zap list --label bug        # 레이블 필터
@@ -46,10 +46,10 @@ zap show 1                  # 이슈 #1 상세
 zap show 1 --raw            # 원본 마크다운
 
 # 상태 변경 (frontmatter state 필드 업데이트)
-zap open 1                  # state: open
-zap start 1                 # state: in-progress
-zap done 1                  # state: done
-zap close 1                 # state: closed (취소/보류)
+zap set open 1              # state: open
+zap set wip 1               # state: wip (작업 시작)
+zap set done 1              # state: done
+zap set closed 1            # state: closed (취소/보류)
 
 # 검색 & 통계
 zap search "키워드"          # 제목/내용 검색
@@ -58,7 +58,7 @@ zap stats                   # 통계 대시보드
 # 다른 프로젝트 이슈 관리 (-C 옵션)
 zap -C ~/other-project list         # 다른 프로젝트 이슈 목록
 zap -C ~/other-project show 5       # 다른 프로젝트 이슈 상세
-zap -C ~/other-project start 5      # 다른 프로젝트 이슈 상태 변경
+zap -C ~/other-project set done 5   # 다른 프로젝트 이슈 상태 변경
 
 # AI 에이전트 지침 파일 생성
 zap init claude             # CLAUDE.md 생성
@@ -74,7 +74,7 @@ zap init claude --path AI_GUIDE.md  # 지정 파일에 생성
 ```
 .issues/
 ├── 001-feat-some-feature.md     # state: open
-├── 002-fix-some-bug.md          # state: in-progress
+├── 002-fix-some-bug.md          # state: wip
 ├── 003-feat-completed.md        # state: done
 └── 004-cancelled-task.md        # state: closed
 ```

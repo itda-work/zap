@@ -92,7 +92,7 @@ func stateClass(s issue.State) string {
 	switch s {
 	case issue.StateOpen:
 		return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-	case issue.StateInProgress:
+	case issue.StateWip:
 		return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
 	case issue.StateDone:
 		return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
@@ -107,7 +107,7 @@ func stateIcon(s issue.State) string {
 	switch s {
 	case issue.StateOpen:
 		return `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/></svg>`
-	case issue.StateInProgress:
+	case issue.StateWip:
 		return `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
 	case issue.StateDone:
 		return `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
@@ -130,7 +130,7 @@ func stateCount(stats *issue.Stats, state string) int {
 }
 
 func displayState(s issue.State) string {
-	if s == issue.StateInProgress {
+	if s == issue.StateWip {
 		return "wip"
 	}
 	return string(s)

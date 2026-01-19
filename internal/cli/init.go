@@ -146,7 +146,7 @@ zap show 10
 ` + "```" + `
 .issues/
 ├── 001-feat-some-feature.md     # state: open
-├── 002-fix-some-bug.md          # state: in-progress
+├── 002-fix-some-bug.md          # state: wip
 ├── 003-feat-completed.md        # state: done
 └── 004-cancelled-task.md        # state: closed
 ` + "```" + `
@@ -206,7 +206,7 @@ updated_at: 2026-01-15T00:00:00Z
 - [ ] 파일이 ` + "`---`" + `로 시작
 - [ ] ` + "`number`" + `: 양의 정수, 파일명과 일치
 - [ ] ` + "`title`" + `: 비어있지 않은 문자열 (따옴표 권장)
-- [ ] ` + "`state`" + `: open, in-progress, done, closed 중 하나
+- [ ] ` + "`state`" + `: open, wip, done, closed 중 하나
 - [ ] ` + "`labels`" + `: YAML 배열 형식 (비어있으면 ` + "`[]`" + `)
 - [ ] ` + "`assignees`" + `: YAML 배열 형식 (비어있으면 ` + "`[]`" + `)
 - [ ] 날짜: RFC3339/ISO8601 형식 (` + "`YYYY-MM-DDTHH:MM:SSZ`" + `)
@@ -231,7 +231,7 @@ zap new "제목" -b "본문"    # 본문과 함께 생성
 ### 목록 조회
 
 ` + "```" + `bash
-zap list                    # 열린 이슈 (open + in-progress)
+zap list                    # 열린 이슈 (open + wip)
 zap list --all              # 전체 이슈
 zap list --state open       # 특정 상태만
 zap list --label bug        # 레이블 필터
@@ -250,10 +250,10 @@ zap show 1 --raw            # 원본 마크다운 출력
 상태 변경 시 파일의 frontmatter가 업데이트됩니다 (파일 위치 변경 없음):
 
 ` + "```" + `bash
-zap open 1                  # state: open (이슈 재오픈)
-zap start 1                 # state: in-progress (작업 시작)
-zap done 1                  # state: done (작업 완료)
-zap close 1                 # state: closed (취소/보류)
+zap set open 1              # state: open (이슈 재오픈)
+zap set wip 1               # state: wip (작업 시작)
+zap set done 1              # state: done (작업 완료)
+zap set closed 1            # state: closed (취소/보류)
 ` + "```" + `
 
 ### 검색
@@ -281,9 +281,9 @@ zap migrate --dry-run       # 변경 사항 미리보기
 ## 워크플로우
 
 1. **새 이슈 생성**: ` + "`zap new \"이슈 제목\"`" + ` 실행
-2. **작업 시작**: ` + "`zap start <number>`" + ` 실행
-3. **작업 완료**: ` + "`zap done <number>`" + ` 실행
-4. **취소/보류**: ` + "`zap close <number>`" + ` 실행
+2. **작업 시작**: ` + "`zap set wip <number>`" + ` 실행
+3. **작업 완료**: ` + "`zap set done <number>`" + ` 실행
+4. **취소/보류**: ` + "`zap set closed <number>`" + ` 실행
 
 ## 주의사항
 

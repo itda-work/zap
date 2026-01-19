@@ -4,103 +4,110 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/itda-work/zap/internal/issue"
 	"github.com/itda-work/zap/internal/project"
 	"github.com/spf13/cobra"
 )
 
-var openCmd = &cobra.Command{
-	Use:               "open <number>",
-	Aliases:           []string{"o"},
-	Short:             "Move issue to open state",
-	Args:              cobra.ExactArgs(1),
-	ValidArgsFunction: completeIssueNumberExcluding(issue.StateOpen),
-	RunE:              makeMoveFunc(issue.StateOpen),
-}
+var setCmd = &cobra.Command{
+	Use:   "set <state> <number>",
+	Short: "Set issue state (open, wip, done, closed)",
+	Long: `Set issue state to one of: open, wip, done, closed.
 
-var startCmd = &cobra.Command{
-	Use:               "start <number>",
-	Aliases:           []string{"wip"},
-	Short:             "Move issue to in-progress state",
-	Args:              cobra.ExactArgs(1),
-	ValidArgsFunction: completeIssueNumberExcluding(issue.StateInProgress),
-	RunE:              makeMoveFunc(issue.StateInProgress),
-}
-
-var doneCmd = &cobra.Command{
-	Use:               "done <number>",
-	Aliases:           []string{"d"},
-	Short:             "Move issue to done state",
-	Args:              cobra.ExactArgs(1),
-	ValidArgsFunction: completeIssueNumberExcluding(issue.StateDone),
-	RunE:              makeMoveFunc(issue.StateDone),
-}
-
-var closeCmd = &cobra.Command{
-	Use:               "close <number>",
-	Aliases:           []string{"c"},
-	Short:             "Move issue to closed state (cancelled/on-hold)",
-	Args:              cobra.ExactArgs(1),
-	ValidArgsFunction: completeIssueNumberExcluding(issue.StateClosed),
-	RunE:              makeMoveFunc(issue.StateClosed),
+Examples:
+  zap set done 1
+  zap set wip 5
+  zap set open 2
+  zap set closed 3`,
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: completeSetArgs,
+	RunE:              runSetCmd,
 }
 
 var (
-	moveProject string
+	setProject string
 )
 
 func init() {
-	rootCmd.AddCommand(openCmd)
-	rootCmd.AddCommand(startCmd)
-	rootCmd.AddCommand(doneCmd)
-	rootCmd.AddCommand(closeCmd)
-
-	// Add --project flag to all move commands
-	for _, cmd := range []*cobra.Command{openCmd, startCmd, doneCmd, closeCmd} {
-		cmd.Flags().StringVarP(&moveProject, "project", "p", "", "Project alias (for multi-project mode)")
-	}
+	rootCmd.AddCommand(setCmd)
+	setCmd.Flags().StringVarP(&setProject, "project", "p", "", "Project alias (for multi-project mode)")
 }
 
-func makeMoveFunc(targetState issue.State) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		// Check for multi-project mode
-		if isMultiProjectMode(cmd) {
-			return runMultiProjectMove(cmd, args, targetState)
+// completeSetArgs provides completion for the set command
+func completeSetArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) == 0 {
+		// Complete state names
+		states := []string{
+			"open\tReopen issue",
+			"wip\tStart working on issue",
+			"done\tMark issue as completed",
+			"closed\tClose issue (cancelled/on-hold)",
 		}
-
-		// Single project mode (existing behavior)
-		number, err := strconv.Atoi(args[0])
-		if err != nil {
-			return fmt.Errorf("invalid issue number: %s", args[0])
+		var completions []string
+		for _, s := range states {
+			if strings.HasPrefix(s, toComplete) {
+				completions = append(completions, s)
+			}
 		}
+		return completions, cobra.ShellCompDirectiveNoFileComp
+	}
 
-		dir, err := getIssuesDir(cmd)
-		if err != nil {
-			return err
+	if len(args) == 1 {
+		// Complete issue numbers (excluding issues already in the target state)
+		targetState, ok := issue.ParseState(args[0])
+		if !ok {
+			return nil, cobra.ShellCompDirectiveError
 		}
-		store := issue.NewStore(dir)
+		return completeIssueNumberExcluding(targetState)(cmd, args[1:], toComplete)
+	}
 
-		// 먼저 이슈 정보 가져오기
-		iss, err := store.Get(number)
-		if err != nil {
-			return err
-		}
+	return nil, cobra.ShellCompDirectiveNoFileComp
+}
 
-		if iss.State == targetState {
-			fmt.Printf("Issue #%d is already in %s state.\n", number, targetState)
-			return nil
-		}
+func runSetCmd(cmd *cobra.Command, args []string) error {
+	stateStr := args[0]
+	targetState, ok := issue.ParseState(stateStr)
+	if !ok {
+		return fmt.Errorf("invalid state: %s (valid: open, wip, done, closed)", stateStr)
+	}
 
-		oldState := iss.State
+	// Check for multi-project mode
+	if isMultiProjectMode(cmd) {
+		return runMultiProjectMove(cmd, args[1:], targetState)
+	}
 
-		if err := store.Move(number, targetState); err != nil {
-			return fmt.Errorf("failed to move issue: %w", err)
-		}
+	// Single project mode
+	number, err := strconv.Atoi(args[1])
+	if err != nil {
+		return fmt.Errorf("invalid issue number: %s", args[1])
+	}
 
-		fmt.Printf("Issue #%d: %s → %s\n", number, oldState, targetState)
+	dir, err := getIssuesDir(cmd)
+	if err != nil {
+		return err
+	}
+	store := issue.NewStore(dir)
+
+	iss, err := store.Get(number)
+	if err != nil {
+		return err
+	}
+
+	if iss.State == targetState {
+		fmt.Printf("Issue #%d is already in %s state.\n", number, targetState)
 		return nil
 	}
+
+	oldState := iss.State
+
+	if err := store.Move(number, targetState); err != nil {
+		return fmt.Errorf("failed to move issue: %w", err)
+	}
+
+	fmt.Printf("Issue #%d: %s → %s\n", number, oldState, targetState)
+	return nil
 }
 
 // runMultiProjectMove handles move commands for multiple projects

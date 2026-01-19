@@ -552,7 +552,7 @@ func printRefTree(nodes []*issue.TreeNode, prefix string, isRoot bool) {
 
 func stateColor(s issue.State) string {
 	switch s {
-	case issue.StateInProgress:
+	case issue.StateWip:
 		return colorYellow
 	case issue.StateDone:
 		return colorGreen

@@ -8,20 +8,20 @@ import (
 type State string
 
 const (
-	StateOpen       State = "open"
-	StateInProgress State = "in-progress"
-	StateDone       State = "done"
-	StateClosed     State = "closed"
+	StateOpen   State = "open"
+	StateWip    State = "wip"
+	StateDone   State = "done"
+	StateClosed State = "closed"
 )
 
 // AllStates returns all valid states
 func AllStates() []State {
-	return []State{StateOpen, StateInProgress, StateDone, StateClosed}
+	return []State{StateOpen, StateWip, StateDone, StateClosed}
 }
 
 // ActiveStates returns states considered "active" (not done)
 func ActiveStates() []State {
-	return []State{StateOpen, StateInProgress}
+	return []State{StateOpen, StateWip}
 }
 
 // Issue represents a single issue
@@ -44,7 +44,7 @@ type Issue struct {
 
 // IsActive returns true if the issue is in an active state
 func (i *Issue) IsActive() bool {
-	return i.State == StateOpen || i.State == StateInProgress
+	return i.State == StateOpen || i.State == StateWip
 }
 
 // StateDir returns the directory name for a given state
@@ -57,8 +57,8 @@ func ParseState(s string) (State, bool) {
 	switch s {
 	case "open":
 		return StateOpen, true
-	case "in-progress", "wip":
-		return StateInProgress, true
+	case "wip":
+		return StateWip, true
 	case "done":
 		return StateDone, true
 	case "closed":

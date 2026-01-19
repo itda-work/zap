@@ -149,7 +149,7 @@ func TestFlatStructureList(t *testing.T) {
 		state    string
 	}{
 		{"001-open-issue.md", 1, "open"},
-		{"002-wip-issue.md", 2, "in-progress"},
+		{"002-wip-issue.md", 2, "wip"},
 		{"003-done-issue.md", 3, "done"},
 	}
 
@@ -191,13 +191,13 @@ Body content.
 		t.Errorf("Expected 1 open issue, got %d", len(open))
 	}
 
-	// Test List by state - in-progress
-	wip, err := store.List(StateInProgress)
+	// Test List by state - wip
+	wip, err := store.List(StateWip)
 	if err != nil {
-		t.Fatalf("List in-progress failed: %v", err)
+		t.Fatalf("List wip failed: %v", err)
 	}
 	if len(wip) != 1 {
-		t.Errorf("Expected 1 in-progress issue, got %d", len(wip))
+		t.Errorf("Expected 1 wip issue, got %d", len(wip))
 	}
 
 	// Verify state comes from frontmatter, not directory
@@ -246,7 +246,7 @@ Body content.
 	originalUpdatedAt := issue.UpdatedAt
 
 	// Update state
-	err = store.UpdateState(issue, StateInProgress)
+	err = store.UpdateState(issue, StateWip)
 	if err != nil {
 		t.Fatalf("UpdateState failed: %v", err)
 	}
@@ -257,8 +257,8 @@ Body content.
 		t.Fatalf("Get updated issue failed: %v", err)
 	}
 
-	if updatedIssue.State != StateInProgress {
-		t.Errorf("Updated state = %v, want in-progress", updatedIssue.State)
+	if updatedIssue.State != StateWip {
+		t.Errorf("Updated state = %v, want wip", updatedIssue.State)
 	}
 
 	// Verify file still exists in same location
@@ -477,7 +477,7 @@ Body content.
 	store := NewStore(tempDir)
 
 	// Move using Move() function (should use UpdateState internally for flat structure)
-	err = store.Move(1, StateInProgress)
+	err = store.Move(1, StateWip)
 	if err != nil {
 		t.Fatalf("Move failed: %v", err)
 	}
@@ -487,8 +487,8 @@ Body content.
 	if err != nil {
 		t.Fatalf("Get issue failed: %v", err)
 	}
-	if issue.State != StateInProgress {
-		t.Errorf("State = %v, want in-progress", issue.State)
+	if issue.State != StateWip {
+		t.Errorf("State = %v, want wip", issue.State)
 	}
 
 	// Verify file still in same location (flat structure behavior)

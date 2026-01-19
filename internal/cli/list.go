@@ -12,7 +12,7 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List issues",
-	Long:  `List issues from the .issues directory. By default shows active issues (open + in-progress).`,
+	Long:  `List issues from the .issues directory. By default shows active issues (open + wip).`,
 	Aliases: []string{"ls"},
 	RunE:    runList,
 }
@@ -33,7 +33,7 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 
 	listCmd.Flags().BoolVarP(&listAll, "all", "a", false, "Show all issues including done and closed")
-	listCmd.Flags().StringVarP(&listState, "state", "s", "", "Filter by state (open, in-progress, done, closed)")
+	listCmd.Flags().StringVarP(&listState, "state", "s", "", "Filter by state (open, wip, done, closed)")
 	listCmd.Flags().StringVarP(&listLabel, "label", "l", "", "Filter by label")
 	listCmd.Flags().StringVar(&listAssignee, "assignee", "", "Filter by assignee")
 	listCmd.Flags().BoolVarP(&listQuiet, "quiet", "q", false, "Suppress parse failure warnings")
@@ -211,7 +211,7 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, ref
 		color string
 	}{
 		issue.StateOpen:       {"[open]", ""},
-		issue.StateInProgress: {"[wip]", colorYellow},
+		issue.StateWip: {"[wip]", colorYellow},
 		issue.StateDone:       {"[done]", colorGreen},
 		issue.StateClosed:     {"[closed]", colorGray},
 	}
@@ -255,7 +255,7 @@ func printMultiProjectIssueList(issues []*project.ProjectIssue, skippedCount int
 		color string
 	}{
 		issue.StateOpen:       {"[open]", ""},
-		issue.StateInProgress: {"[wip]", colorYellow},
+		issue.StateWip: {"[wip]", colorYellow},
 		issue.StateDone:       {"[done]", colorGreen},
 		issue.StateClosed:     {"[closed]", colorGray},
 	}

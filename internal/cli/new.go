@@ -53,7 +53,7 @@ func init() {
 	newCmd.Flags().StringArrayVarP(&newAssignees, "assignee", "a", nil, "Add assignee (can be used multiple times)")
 	newCmd.Flags().StringVarP(&newBody, "body", "b", "", "Issue body content")
 	newCmd.Flags().BoolVarP(&newEditor, "editor", "e", false, "Open editor to write issue body")
-	newCmd.Flags().StringVarP(&newState, "state", "s", "open", "Initial state (open, in-progress, done, closed)")
+	newCmd.Flags().StringVarP(&newState, "state", "s", "open", "Initial state (open, wip, done, closed)")
 	newCmd.Flags().StringVarP(&newProject, "project", "p", "", "Project alias (required for multi-project mode)")
 }
 
@@ -66,7 +66,7 @@ func runNew(cmd *cobra.Command, args []string) error {
 	// Validate state
 	state, ok := issue.ParseState(newState)
 	if !ok {
-		return fmt.Errorf("invalid state: %s (valid: open, in-progress, done, closed)", newState)
+		return fmt.Errorf("invalid state: %s (valid: open, wip, done, closed)", newState)
 	}
 
 	// Check for multi-project mode

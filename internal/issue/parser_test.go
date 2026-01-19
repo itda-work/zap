@@ -66,7 +66,7 @@ func TestParseBytesMinimal(t *testing.T) {
 	content := `---
 number: 42
 title: "Minimal Issue"
-state: in-progress
+state: wip
 ---
 `
 
@@ -79,8 +79,8 @@ state: in-progress
 		t.Errorf("Number = %d, want 42", issue.Number)
 	}
 
-	if issue.State != StateInProgress {
-		t.Errorf("State = %q, want %q", issue.State, StateInProgress)
+	if issue.State != StateWip {
+		t.Errorf("State = %q, want %q", issue.State, StateWip)
 	}
 
 	if len(issue.Labels) != 0 {

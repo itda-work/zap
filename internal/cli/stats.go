@@ -131,10 +131,10 @@ func printStats(stats *issue.Stats, filterDescription string) {
 
 	// 상태별 통계
 	fmt.Println("\n📁 By State:")
-	stateOrder := []issue.State{issue.StateOpen, issue.StateInProgress, issue.StateDone, issue.StateClosed}
+	stateOrder := []issue.State{issue.StateOpen, issue.StateWip, issue.StateDone, issue.StateClosed}
 	stateEmoji := map[issue.State]string{
 		issue.StateOpen:       "○",
-		issue.StateInProgress: "◐",
+		issue.StateWip: "◐",
 		issue.StateDone:       "●",
 		issue.StateClosed:     "✕",
 	}

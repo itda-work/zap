@@ -119,7 +119,7 @@ Rules:
 - Must start and end with ---
 - Required fields: number, title, state, labels, assignees, created_at, updated_at
 - Extract number from filename if missing (e.g., "158-feat..." → number: 158)
-- state must be one of: open, in-progress, done, closed
+- state must be one of: open, wip, done, closed
 - labels and assignees should be arrays (use [] if empty)
 - Dates should be in YYYY-MM-DD format
 
