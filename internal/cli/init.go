@@ -10,7 +10,7 @@ import (
 )
 
 var initCmd = &cobra.Command{
-	Use:     "init <agent>",
+	Use:     "init [agent]",
 	Aliases: []string{"i"},
 	Short:   "Initialize agent instruction file",
 	Long:    `Initialize an instruction file for AI coding assistants.
@@ -20,11 +20,13 @@ Supported agents:
   codex     Create AGENTS.md for OpenAI Codex CLI
   gemini    Create GEMINI.md for Google Gemini
 
+Either an agent name or --path flag is required.
+
 Examples:
-  zap init claude                       # Create CLAUDE.md in project root
-  zap init claude --path AI_GUIDE.md    # Create AI_GUIDE.md instead
-  zap init codex --path docs/AGENTS.md  # Create docs/AGENTS.md`,
-	Args:      cobra.ExactArgs(1),
+  zap init claude                  # Create CLAUDE.md in project root
+  zap init codex                   # Create AGENTS.md in project root
+  zap init --path AI_GUIDE.md      # Create AI_GUIDE.md directly`,
+	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: []string{"claude", "codex", "gemini"},
 	RunE:      runInit,
 }
@@ -37,33 +39,17 @@ func init() {
 	initCmd.Flags().StringVar(&initPath, "path", "", "File path for instruction file (default: CLAUDE.md/AGENTS.md/GEMINI.md)")
 }
 
-// agentConfig holds configuration for each agent type
-type agentConfig struct {
-	filename string
-	header   string
-}
-
-var agentConfigs = map[string]agentConfig{
-	"claude": {
-		filename: "CLAUDE.md",
-		header:   "# Local Issue Management (zap) - Claude Instructions",
-	},
-	"codex": {
-		filename: "AGENTS.md",
-		header:   "# Local Issue Management (zap) - Codex Instructions",
-	},
-	"gemini": {
-		filename: "GEMINI.md",
-		header:   "# Local Issue Management (zap) - Gemini Instructions",
-	},
+// agentFilenames maps agent names to their default filenames
+var agentFilenames = map[string]string{
+	"claude": "CLAUDE.md",
+	"codex":  "AGENTS.md",
+	"gemini": "GEMINI.md",
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
-	agent := strings.ToLower(args[0])
-
-	config, ok := agentConfigs[agent]
-	if !ok {
-		return fmt.Errorf("unsupported agent: %s (supported: claude, codex, gemini)", agent)
+	// Require either agent argument or --path flag
+	if len(args) == 0 && initPath == "" {
+		return fmt.Errorf("either an agent name (claude, codex, gemini) or --path flag is required")
 	}
 
 	// Get project directory from -C flag
@@ -82,12 +68,17 @@ func runInit(cmd *cobra.Command, args []string) error {
 			targetFile = filepath.Join(projectDir, initPath)
 		}
 	} else {
-		// Default to agent's default filename in project root
-		targetFile = filepath.Join(projectDir, config.filename)
+		// Use agent's default filename
+		agent := strings.ToLower(args[0])
+		filename, ok := agentFilenames[agent]
+		if !ok {
+			return fmt.Errorf("unsupported agent: %s (supported: claude, codex, gemini)", agent)
+		}
+		targetFile = filepath.Join(projectDir, filename)
 	}
 
 	// Generate instruction content
-	content := generateInstructions(config.header)
+	content := generateInstructions()
 
 	// Create parent directory if needed
 	if dir := filepath.Dir(targetFile); dir != "" && dir != "." {
@@ -124,8 +115,8 @@ func runInit(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func generateInstructions(header string) string {
-	return header + `
+func generateInstructions() string {
+	return `# zap - Local Issue Management
 
 이 프로젝트는 로컬 이슈 관리 시스템(.issues/)을 사용합니다.
 
