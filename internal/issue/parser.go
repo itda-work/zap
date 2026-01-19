@@ -11,6 +11,83 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// DatetimeFormat represents the detected format of a datetime string
+type DatetimeFormat string
+
+const (
+	FormatRFC3339       DatetimeFormat = "RFC3339"           // 2026-01-17T15:47:00Z
+	FormatISO8601       DatetimeFormat = "ISO8601"           // 2026-01-17T15:47:00
+	FormatDatetimeSpace DatetimeFormat = "YYYY-MM-DD HH:MM:SS" // 2026-01-17 15:47:00
+	FormatDatetimeShort DatetimeFormat = "YYYY-MM-DD HH:MM"    // 2026-01-17 15:47
+	FormatDateOnly      DatetimeFormat = "YYYY-MM-DD"          // 2026-01-17
+	FormatEmpty         DatetimeFormat = "(empty)"
+	FormatUnknown       DatetimeFormat = "(unknown)"
+)
+
+// datetimeFormats maps Go time formats to our DatetimeFormat constants
+var datetimeFormats = []struct {
+	layout string
+	format DatetimeFormat
+}{
+	{time.RFC3339, FormatRFC3339},
+	{"2006-01-02T15:04:05", FormatISO8601},
+	{"2006-01-02 15:04:05", FormatDatetimeSpace},
+	{"2006-01-02 15:04", FormatDatetimeShort},
+	{"2006-01-02", FormatDateOnly},
+}
+
+// DetectDatetimeFormat detects the format of a datetime string
+func DetectDatetimeFormat(s string) DatetimeFormat {
+	if s == "" {
+		return FormatEmpty
+	}
+
+	for _, f := range datetimeFormats {
+		if _, err := time.Parse(f.layout, s); err == nil {
+			return f.format
+		}
+	}
+
+	return FormatUnknown
+}
+
+// RawDatetimeInfo contains raw datetime strings from an issue file
+type RawDatetimeInfo struct {
+	Number    int
+	Title     string
+	FilePath  string
+	CreatedAt string
+	UpdatedAt string
+	ClosedAt  string
+}
+
+// GetRawDatetimeInfo extracts raw datetime strings from an issue file
+func GetRawDatetimeInfo(filePath string) (*RawDatetimeInfo, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	frontmatter, _, err := splitFrontmatter(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse frontmatter: %w", err)
+	}
+
+	var raw rawFrontmatter
+	if err := yaml.Unmarshal(frontmatter, &raw); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal frontmatter: %w", err)
+	}
+
+	return &RawDatetimeInfo{
+		Number:    raw.Number,
+		Title:     raw.Title,
+		FilePath:  filePath,
+		CreatedAt: coalesce(raw.CreatedAt, raw.Created),
+		UpdatedAt: coalesce(raw.UpdatedAt, raw.Updated),
+		ClosedAt:  raw.ClosedAt,
+	}, nil
+}
+
 // rawFrontmatter is an intermediate struct that supports both field naming conventions
 type rawFrontmatter struct {
 	Number    int      `yaml:"number"`

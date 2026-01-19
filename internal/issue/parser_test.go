@@ -319,3 +319,66 @@ func TestParseFlexibleTime(t *testing.T) {
 		})
 	}
 }
+
+func TestDetectDatetimeFormat(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected DatetimeFormat
+	}{
+		{
+			name:     "RFC3339 with Z",
+			input:    "2026-01-17T15:47:00Z",
+			expected: FormatRFC3339,
+		},
+		{
+			name:     "RFC3339 with offset",
+			input:    "2026-01-17T15:47:00+09:00",
+			expected: FormatRFC3339,
+		},
+		{
+			name:     "ISO8601 without timezone",
+			input:    "2026-01-17T15:47:00",
+			expected: FormatISO8601,
+		},
+		{
+			name:     "datetime with space and seconds",
+			input:    "2026-01-17 15:47:00",
+			expected: FormatDatetimeSpace,
+		},
+		{
+			name:     "datetime with space no seconds",
+			input:    "2026-01-17 15:47",
+			expected: FormatDatetimeShort,
+		},
+		{
+			name:     "date only",
+			input:    "2026-01-17",
+			expected: FormatDateOnly,
+		},
+		{
+			name:     "empty string",
+			input:    "",
+			expected: FormatEmpty,
+		},
+		{
+			name:     "invalid format",
+			input:    "not-a-date",
+			expected: FormatUnknown,
+		},
+		{
+			name:     "partial date",
+			input:    "2026-01",
+			expected: FormatUnknown,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := DetectDatetimeFormat(tt.input)
+			if result != tt.expected {
+				t.Errorf("DetectDatetimeFormat(%q) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
