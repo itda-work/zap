@@ -1,10 +1,7 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/itda-work/zap/internal/issue"
 	"github.com/spf13/cobra"
@@ -75,7 +72,7 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 	// Confirm unless --yes
 	if !migrateYes {
 		fmt.Println()
-		if !confirmMigrate("Migrate to flat structure?") {
+		if !confirm("Migrate to flat structure?") {
 			fmt.Println("Migration cancelled.")
 			return nil
 		}
@@ -97,12 +94,4 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func confirmMigrate(prompt string) bool {
-	fmt.Printf("%s [y/N]: ", prompt)
-	reader := bufio.NewReader(os.Stdin)
-	response, _ := reader.ReadString('\n')
-	response = strings.ToLower(strings.TrimSpace(response))
-	return response == "y" || response == "yes"
 }
