@@ -73,27 +73,88 @@ zap fix-datetime-format [options]
 
 ## 구현
 
+### 수정 필요 파일
+
+#### 1. `internal/cli/new.go` - 이슈 생성 시 UTC 사용
+
+```go
+// 변경 전 (line 140, 368)
+now := time.Now()
+
+// 변경 후
+now := time.Now().UTC()
+```
+
+#### 2. `internal/issue/parser.go` - 직렬화 시 RFC3339 형식 강제
+
+```go
+// Serialize에서 time.Time을 RFC3339 형식으로 변환
+type serializableFrontmatter struct {
+    Number    int      `yaml:"number"`
+    Title     string   `yaml:"title"`
+    State     State    `yaml:"state"`
+    Labels    []string `yaml:"labels"`
+    Assignees []string `yaml:"assignees"`
+    CreatedAt string   `yaml:"created_at"`  // string으로 변환
+    UpdatedAt string   `yaml:"updated_at"`  // string으로 변환
+}
+
+func Serialize(issue *Issue) ([]byte, error) {
+    sf := serializableFrontmatter{
+        Number:    issue.Number,
+        Title:     issue.Title,
+        State:     issue.State,
+        Labels:    issue.Labels,
+        Assignees: issue.Assignees,
+        CreatedAt: issue.CreatedAt.UTC().Format(time.RFC3339),
+        UpdatedAt: issue.UpdatedAt.UTC().Format(time.RFC3339),
+    }
+    // ...
+}
+```
+
+#### 3. `internal/cli/list.go`, `show.go` - 표시 시 로컬 변환
+
+```go
+// 표시할 때 로컬 타임존으로 변환
+func formatLocalTime(t time.Time) string {
+    return t.Local().Format("2006-01-02 15:04:05")
+}
+```
+
 ### 파일 구조
 
 ```
 internal/
 ├── cli/
-│   └── fix_datetime.go    # CLI 명령
+│   ├── new.go              # time.Now().UTC() 사용
+│   ├── list.go             # 로컬 시간 표시
+│   ├── show.go             # 로컬 시간 표시
+│   └── fix_datetime.go     # 새 명령
 └── issue/
-    └── datetime.go        # 날짜 파싱/변환 로직
+    └── parser.go           # RFC3339 직렬화
 ```
 
 ### 작업 목록
 
-- [ ] `internal/issue/datetime.go` - 유연한 날짜 파싱 함수
-- [ ] `internal/issue/datetime.go` - UTC 변환 함수
-- [ ] `internal/issue/datetime.go` - 로컬 표시 변환 함수
+**기본 인프라 (신규 이슈 생성 시 적용)**
+- [ ] `internal/cli/new.go` - `time.Now().UTC()` 사용
+- [ ] `internal/issue/parser.go` - `Serialize()` RFC3339 UTC 형식 강제
+
+**표시 로직 수정**
+- [ ] `internal/cli/list.go` - 로컬 타임존 변환 표시
+- [ ] `internal/cli/show.go` - 로컬 타임존 변환 표시
+
+**기존 이슈 마이그레이션 (fix-datetime-format 명령)**
 - [ ] `internal/cli/fix_datetime.go` - CLI 명령 구현
 - [ ] `--dry-run` 옵션 구현
 - [ ] `--git-dates` 옵션 구현
 - [ ] `--number` 옵션 구현
-- [ ] `zap list`, `zap show` 표시 로직 수정
-- [ ] 테스트 작성
+
+**테스트**
+- [ ] 직렬화/역직렬화 테스트
+- [ ] 로컬 표시 변환 테스트
+- [ ] fix-datetime-format 명령 테스트
 
 ## 예시
 
