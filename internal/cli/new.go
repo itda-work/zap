@@ -137,7 +137,7 @@ func runNew(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create issue struct
-	now := time.Now()
+	now := time.Now().UTC()
 	iss := &issue.Issue{
 		Number:    nextNumber,
 		Title:     title,
@@ -365,7 +365,7 @@ func createIssueInProject(proj *project.Project, issuesDir string, title string,
 	}
 
 	// Create issue struct
-	now := time.Now()
+	now := time.Now().UTC()
 	iss := &issue.Issue{
 		Number:    nextNumber,
 		Title:     title,

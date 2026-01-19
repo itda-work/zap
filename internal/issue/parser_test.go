@@ -201,6 +201,62 @@ This issue uses alternative field names.
 	}
 }
 
+func TestSerializeRFC3339UTCFormat(t *testing.T) {
+	// Test that Serialize always outputs RFC3339 UTC format regardless of input timezone
+	tests := []struct {
+		name               string
+		createdAt          time.Time
+		expectedTimestamp  string // The actual timestamp value to check for
+	}{
+		{
+			name:               "UTC input",
+			createdAt:          time.Date(2026, 1, 17, 6, 30, 0, 0, time.UTC),
+			expectedTimestamp:  "2026-01-17T06:30:00Z",
+		},
+		{
+			name:               "KST input (+09:00)",
+			createdAt:          time.Date(2026, 1, 17, 15, 30, 0, 0, time.FixedZone("KST", 9*60*60)),
+			expectedTimestamp:  "2026-01-17T06:30:00Z",
+		},
+		{
+			name:               "EST input (-05:00)",
+			createdAt:          time.Date(2026, 1, 17, 1, 30, 0, 0, time.FixedZone("EST", -5*60*60)),
+			expectedTimestamp:  "2026-01-17T06:30:00Z",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			issue := &Issue{
+				Number:    1,
+				Title:     "Test",
+				State:     StateOpen,
+				Labels:    []string{},
+				Assignees: []string{},
+				CreatedAt: tt.createdAt,
+				UpdatedAt: tt.createdAt,
+				Body:      "",
+			}
+
+			data, err := Serialize(issue)
+			if err != nil {
+				t.Fatalf("Serialize failed: %v", err)
+			}
+
+			content := string(data)
+			// YAML may quote strings, so just check for the timestamp value
+			if !containsString(content, tt.expectedTimestamp) {
+				t.Errorf("Expected output to contain %q, got:\n%s", tt.expectedTimestamp, content)
+			}
+
+			// Verify it ends with Z (UTC marker) not with offset like +09:00
+			if containsString(content, "+09:00") || containsString(content, "-05:00") {
+				t.Errorf("Output should not contain timezone offset, got:\n%s", content)
+			}
+		})
+	}
+}
+
 func TestParseFlexibleTime(t *testing.T) {
 	tests := []struct {
 		name     string

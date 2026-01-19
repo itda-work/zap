@@ -160,9 +160,36 @@ func splitFrontmatter(data []byte) ([]byte, string, error) {
 	return frontmatter, body, nil
 }
 
+// serializableFrontmatter is used for consistent RFC3339 UTC datetime serialization
+type serializableFrontmatter struct {
+	Number    int      `yaml:"number"`
+	Title     string   `yaml:"title"`
+	State     State    `yaml:"state"`
+	Labels    []string `yaml:"labels"`
+	Assignees []string `yaml:"assignees"`
+	CreatedAt string   `yaml:"created_at"`
+	UpdatedAt string   `yaml:"updated_at"`
+	ClosedAt  string   `yaml:"closed_at,omitempty"`
+}
+
 // Serialize converts an Issue back to markdown format
 func Serialize(issue *Issue) ([]byte, error) {
-	frontmatter, err := yaml.Marshal(issue)
+	// Convert to serializable format with RFC3339 UTC timestamps
+	sf := serializableFrontmatter{
+		Number:    issue.Number,
+		Title:     issue.Title,
+		State:     issue.State,
+		Labels:    issue.Labels,
+		Assignees: issue.Assignees,
+		CreatedAt: issue.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt: issue.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+
+	if issue.ClosedAt != nil {
+		sf.ClosedAt = issue.ClosedAt.UTC().Format(time.RFC3339)
+	}
+
+	frontmatter, err := yaml.Marshal(sf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal frontmatter: %w", err)
 	}

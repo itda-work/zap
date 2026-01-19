@@ -319,11 +319,11 @@ func printIssueDetail(iss *issue.Issue) {
 		fmt.Printf("Assignee: %s\n", strings.Join(iss.Assignees, ", "))
 	}
 
-	fmt.Printf("Created:  %s\n", iss.CreatedAt.Format("2006-01-02 15:04"))
-	fmt.Printf("Updated:  %s\n", iss.UpdatedAt.Format("2006-01-02 15:04"))
+	fmt.Printf("Created:  %s\n", iss.CreatedAt.Local().Format("2006-01-02 15:04"))
+	fmt.Printf("Updated:  %s\n", iss.UpdatedAt.Local().Format("2006-01-02 15:04"))
 
 	if iss.ClosedAt != nil {
-		fmt.Printf("Closed:   %s\n", iss.ClosedAt.Format("2006-01-02 15:04"))
+		fmt.Printf("Closed:   %s\n", iss.ClosedAt.Local().Format("2006-01-02 15:04"))
 	}
 
 	fmt.Printf("File:     %s\n", iss.FilePath)

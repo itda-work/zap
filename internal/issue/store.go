@@ -272,11 +272,11 @@ func (s *Store) UpdateState(issue *Issue, newState State) error {
 
 	// Update state and timestamps
 	issue.State = newState
-	issue.UpdatedAt = time.Now()
+	issue.UpdatedAt = time.Now().UTC()
 
 	// Handle closed_at timestamp
 	if newState == StateDone || newState == StateClosed {
-		now := time.Now()
+		now := time.Now().UTC()
 		issue.ClosedAt = &now
 	} else {
 		issue.ClosedAt = nil

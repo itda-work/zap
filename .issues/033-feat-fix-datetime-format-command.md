@@ -1,13 +1,14 @@
 ---
 number: 33
-title: "feat(cli): add fix-datetime-format command"
-state: open
+title: 'feat(cli): add fix-datetime-format command'
+state: done
 labels:
-  - feature
-  - cli
+    - feature
+    - cli
 assignees: []
-created_at: 2026-01-19T00:30:00Z
-updated_at: 2026-01-19T00:30:00Z
+created_at: "2026-01-19T00:30:00Z"
+updated_at: "2026-01-19T00:35:50Z"
+closed_at: "2026-01-19T00:35:50Z"
 ---
 
 ## 개요
@@ -51,16 +52,16 @@ updated_at: 2026-01-19T00:30:00Z
 ## 명령 구조
 
 ```bash
-zap fix-datetime-format [options]
+zap fix-datetime-format [number] [flags]
 ```
 
 ### 옵션
 
 | 옵션 | 설명 | 기본값 |
 |------|------|--------|
+| `[number]` | 특정 이슈만 처리 (positional arg) | 전체 |
 | `--dry-run` | 변경사항 미리보기만 | false |
 | `--git-dates` | 날짜가 zero value일 때 git 날짜 사용 | false |
-| `--number`, `-n` | 특정 이슈만 처리 | 전체 |
 
 ## 변환 규칙 (저장 시)
 
@@ -138,23 +139,23 @@ internal/
 ### 작업 목록
 
 **기본 인프라 (신규 이슈 생성 시 적용)**
-- [ ] `internal/cli/new.go` - `time.Now().UTC()` 사용
-- [ ] `internal/issue/parser.go` - `Serialize()` RFC3339 UTC 형식 강제
+- [x] `internal/cli/new.go` - `time.Now().UTC()` 사용
+- [x] `internal/issue/store.go` - `time.Now().UTC()` 사용 (상태 변경 시)
+- [x] `internal/issue/parser.go` - `Serialize()` RFC3339 UTC 형식 강제
 
 **표시 로직 수정**
-- [ ] `internal/cli/list.go` - 로컬 타임존 변환 표시
-- [ ] `internal/cli/show.go` - 로컬 타임존 변환 표시
+- [x] `internal/cli/show.go` - 로컬 타임존 변환 표시 (`.Local().Format()`)
+- [x] `internal/cli/list.go` - 날짜 표시 없음 (변경 불필요)
 
 **기존 이슈 마이그레이션 (fix-datetime-format 명령)**
-- [ ] `internal/cli/fix_datetime.go` - CLI 명령 구현
-- [ ] `--dry-run` 옵션 구현
-- [ ] `--git-dates` 옵션 구현
-- [ ] `--number` 옵션 구현
+- [x] `internal/cli/fix_datetime.go` - CLI 명령 구현
+- [x] `--dry-run` 옵션 구현
+- [x] `--git-dates` 옵션 구현
+- [x] `[number]` positional argument 구현
 
 **테스트**
-- [ ] 직렬화/역직렬화 테스트
-- [ ] 로컬 표시 변환 테스트
-- [ ] fix-datetime-format 명령 테스트
+- [x] 직렬화/역직렬화 테스트 (`parser_test.go`)
+- [x] fix-datetime-format 명령 테스트 (`fix_datetime_test.go`)
 
 ## 예시
 
@@ -169,5 +170,28 @@ zap fix-datetime-format
 zap fix-datetime-format --git-dates
 
 # 특정 이슈만
-zap fix-datetime-format -n 1
+zap fix-datetime-format 1
 ```
+
+## 구현 완료
+
+### 변경된 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `internal/cli/new.go` | `time.Now()` → `time.Now().UTC()` (line 140, 368) |
+| `internal/issue/store.go` | `time.Now()` → `time.Now().UTC()` (line 275, 279) |
+| `internal/issue/parser.go` | `serializableFrontmatter` 구조체 추가, `Serialize()` RFC3339 UTC 출력 |
+| `internal/cli/show.go` | `.Local().Format()` 적용 (line 322-327) |
+
+### 새로 생성된 파일
+
+| 파일 | 설명 |
+|------|------|
+| `internal/cli/fix_datetime.go` | `fix-datetime-format` 명령 구현 |
+| `internal/cli/fix_datetime_test.go` | 명령 테스트 |
+
+### 테스트 결과
+
+- 모든 테스트 통과 (`go test ./internal/...`)
+- 기존 33개 이슈 모두 올바른 형식으로 확인됨
