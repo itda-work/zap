@@ -7,8 +7,8 @@ labels:
     - ai
     - cli
 assignees: []
-created_at: 2026-01-16T00:00:00Z
-updated_at: 2026-01-16T00:00:00Z
+created_at: 2026-01-16T19:44:16Z
+updated_at: 2026-01-16T23:29:56Z
 ---
 
 ## 설명

@@ -6,7 +6,7 @@ labels:
     - bug
     - cli
 assignees: []
-created_at: 2026-01-17T00:00:00Z
+created_at: 2026-01-17T10:23:25Z
 updated_at: 2026-01-17T10:23:16.814577+09:00
 closed_at: 2026-01-17T10:23:16.814577+09:00
 ---

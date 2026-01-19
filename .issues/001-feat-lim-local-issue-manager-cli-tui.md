@@ -8,8 +8,8 @@ labels:
     - tui
 assignees:
     - allieus
-created_at: 2026-01-15T00:00:00Z
-updated_at: 2026-01-15T00:00:00Z
+created_at: 2026-01-15T18:39:24Z
+updated_at: 2026-01-17T15:05:14Z
 ---
 
 ## 개요
@@ -77,8 +77,8 @@ labels:
   - urgent
 assignees:
   - username
-created_at: 2026-01-15T00:00:00Z
-updated_at: 2026-01-15T00:00:00Z
+created_at: 2026-01-15T18:39:24Z
+updated_at: 2026-01-17T15:05:14Z
 closed_at:
 ---
 
