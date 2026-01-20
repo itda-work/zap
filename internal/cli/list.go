@@ -207,13 +207,14 @@ func runMultiProjectList(cmd *cobra.Command, args []string) error {
 func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, refGraph *issue.RefGraph, multiProject bool) {
 	// 상태별 텍스트 태그와 색상
 	stateStyle := map[issue.State]struct {
-		tag   string
-		color string
+		tag        string
+		color      string
+		titleColor string
 	}{
-		issue.StateOpen:       {"[open]", ""},
-		issue.StateWip: {"[wip]", colorYellow},
-		issue.StateDone:       {"[done]", colorGreen},
-		issue.StateClosed:     {"[closed]", colorGray},
+		issue.StateOpen:   {"[open]", "", ""},
+		issue.StateWip:    {"[wip]", colorYellow, colorBrightYellow},
+		issue.StateDone:   {"[done]", colorGreen, colorBrightGreen},
+		issue.StateClosed: {"[closed]", colorGray, colorLightGray},
 	}
 
 	for _, iss := range issues {
@@ -234,6 +235,8 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, ref
 
 		// 제목에 키워드 하이라이트 적용
 		title := highlightKeyword(iss.Title, keyword)
+		// 상태별 밝은 색상을 제목에 적용
+		title = colorize(title, style.titleColor)
 
 		// 태그를 색상 적용 후 출력, 나머지는 기본 색상
 		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
@@ -251,13 +254,14 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, ref
 func printMultiProjectIssueList(issues []*project.ProjectIssue, skippedCount int, keyword string) {
 	// 상태별 텍스트 태그와 색상
 	stateStyle := map[issue.State]struct {
-		tag   string
-		color string
+		tag        string
+		color      string
+		titleColor string
 	}{
-		issue.StateOpen:       {"[open]", ""},
-		issue.StateWip: {"[wip]", colorYellow},
-		issue.StateDone:       {"[done]", colorGreen},
-		issue.StateClosed:     {"[closed]", colorGray},
+		issue.StateOpen:   {"[open]", "", ""},
+		issue.StateWip:    {"[wip]", colorYellow, colorBrightYellow},
+		issue.StateDone:   {"[done]", colorGreen, colorBrightGreen},
+		issue.StateClosed: {"[closed]", colorGray, colorLightGray},
 	}
 
 	for _, pIss := range issues {
@@ -269,6 +273,8 @@ func printMultiProjectIssueList(issues []*project.ProjectIssue, skippedCount int
 
 		// 제목에 키워드 하이라이트 적용
 		title := highlightKeyword(pIss.Title, keyword)
+		// 상태별 밝은 색상을 제목에 적용
+		title = colorize(title, style.titleColor)
 
 		// 태그를 색상 적용 후 출력
 		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)

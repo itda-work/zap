@@ -15,6 +15,11 @@ const (
 	colorBlue   = "\033[34m"
 	colorCyan   = "\033[36m"
 	colorGray   = "\033[90m"
+
+	// Bright colors (for title highlighting)
+	colorBrightGreen  = "\033[92m"
+	colorBrightYellow = "\033[93m"
+	colorLightGray    = "\033[37m"
 )
 
 // colorEnabled indicates whether color output is supported
