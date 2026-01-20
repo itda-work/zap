@@ -27,6 +27,7 @@ var (
 	listTitleOnly  bool
 	listDateFilter DateFilter
 	listRefs       bool
+	listNoDate     bool
 )
 
 func init() {
@@ -52,6 +53,9 @@ func init() {
 
 	// Reference options
 	listCmd.Flags().BoolVar(&listRefs, "refs", false, "Show reference count for each issue")
+
+	// Date display options
+	listCmd.Flags().BoolVar(&listNoDate, "no-date", false, "Hide updated time from output")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -233,6 +237,12 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, ref
 			}
 		}
 
+		// Updated time suffix
+		dateSuffix := ""
+		if !listNoDate {
+			dateSuffix = fmt.Sprintf(" %s", colorize(formatRelativeTime(iss.UpdatedAt), colorGray))
+		}
+
 		// 제목에 키워드 하이라이트 적용
 		title := highlightKeyword(iss.Title, keyword)
 		// 상태별 밝은 색상을 제목에 적용
@@ -240,7 +250,7 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, ref
 
 		// 태그를 색상 적용 후 출력, 나머지는 기본 색상
 		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
-		fmt.Printf("%s #%-4d %s%s%s\n", tag, iss.Number, title, labels, refSuffix)
+		fmt.Printf("%s #%-4d %s%s%s%s\n", tag, iss.Number, title, labels, refSuffix, dateSuffix)
 	}
 
 	if skippedCount > 0 {
@@ -271,6 +281,12 @@ func printMultiProjectIssueList(issues []*project.ProjectIssue, skippedCount int
 			labels = fmt.Sprintf(" [%s]", strings.Join(pIss.Labels, ", "))
 		}
 
+		// Updated time suffix
+		dateSuffix := ""
+		if !listNoDate {
+			dateSuffix = fmt.Sprintf(" %s", colorize(formatRelativeTime(pIss.UpdatedAt), colorGray))
+		}
+
 		// 제목에 키워드 하이라이트 적용
 		title := highlightKeyword(pIss.Title, keyword)
 		// 상태별 밝은 색상을 제목에 적용
@@ -280,7 +296,7 @@ func printMultiProjectIssueList(issues []*project.ProjectIssue, skippedCount int
 		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
 		// Use project/# format for multi-project mode
 		ref := colorize(fmt.Sprintf("%-12s", pIss.Ref()), colorCyan)
-		fmt.Printf("%s %s %s%s\n", tag, ref, title, labels)
+		fmt.Printf("%s %s %s%s%s\n", tag, ref, title, labels, dateSuffix)
 	}
 
 	if skippedCount > 0 {
