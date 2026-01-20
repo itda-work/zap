@@ -6,8 +6,8 @@ labels:
     - enhancement
 assignees: []
 created_at: "2026-01-20T10:03:19Z"
-updated_at: "2026-01-20T10:08:04Z"
-closed_at: "2026-01-20T10:08:04Z"
+updated_at: "2026-01-20T10:14:44Z"
+closed_at: "2026-01-20T10:14:44Z"
 ---
 
 ## 개요

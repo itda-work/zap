@@ -21,6 +21,9 @@ const (
 	colorBrightYellow = "\033[93m"
 	colorLightGray    = "\033[37m"
 
+	// Background colors
+	bgGray = "\033[48;5;238m" // Dark gray background for recently closed
+
 	// Invert mode (swap foreground and background)
 	colorInvert = "\033[7m"
 )
@@ -57,4 +60,12 @@ func colorizeInvert(text, color string) string {
 		return colorInvert + text + colorReset
 	}
 	return color + colorInvert + text + colorReset
+}
+
+// colorizeWithBg wraps text with foreground color and background color
+func colorizeWithBg(text, fgColor, bgColor string) string {
+	if !colorEnabled {
+		return text
+	}
+	return bgColor + fgColor + text + colorReset
 }

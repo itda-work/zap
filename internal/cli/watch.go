@@ -180,8 +180,8 @@ func printWatchStats(stats *issue.Stats) {
 	// Format: Open: N | WIP: N | Done: N | Closed: N
 	parts := []string{
 		fmt.Sprintf("%s: %s", "Open", colorize(fmt.Sprintf("%d", stats.ByState[issue.StateOpen]), "")),
-		fmt.Sprintf("%s: %s", colorize("WIP", colorYellow), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateWip]), colorYellow)),
-		fmt.Sprintf("%s: %s", colorize("Done", colorGreen), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateDone]), colorGreen)),
+		fmt.Sprintf("%s: %s", colorize("WIP", colorBrightYellow), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateWip]), colorBrightYellow)),
+		fmt.Sprintf("%s: %s", colorize("Done", colorBrightGreen), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateDone]), colorBrightGreen)),
 		fmt.Sprintf("%s: %s", colorize("Closed", colorGray), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateClosed]), colorGray)),
 	}
 	fmt.Println(strings.Join(parts, " | "))
@@ -194,8 +194,8 @@ func printWatchIssueList(issues []*issue.Issue, recentClosedDuration time.Durati
 		titleColor string
 	}{
 		issue.StateOpen:   {"[open]", "", ""},
-		issue.StateWip:    {"[wip]", colorYellow, colorBrightYellow},
-		issue.StateDone:   {"[done]", colorGreen, colorBrightGreen},
+		issue.StateWip:    {"[wip]", colorBrightYellow, colorBrightYellow},
+		issue.StateDone:   {"[done]", colorBrightGreen, colorBrightGreen},
 		issue.StateClosed: {"[closed]", colorGray, colorLightGray},
 	}
 
@@ -215,16 +215,27 @@ func printWatchIssueList(issues []*issue.Issue, recentClosedDuration time.Durati
 		// Check if this is a recently closed issue
 		recentlyClosed := isRecentlyClosed(iss.UpdatedAt, string(iss.State), recentClosedDuration)
 
-		var title, tag string
 		if recentlyClosed {
-			// Apply inverted colors for recently closed issues
-			title = colorizeInvert(iss.Title, style.titleColor)
-			tag = colorizeInvert(fmt.Sprintf("%-8s", style.tag), style.color)
+			// Apply background color for entire row of recently closed issues
+			tag := colorizeWithBg(fmt.Sprintf("%-8s", style.tag), style.color, bgGray)
+			titlePart := colorizeWithBg(iss.Title, style.titleColor, bgGray)
+			labelsPart := colorizeWithBg(labels, "", bgGray)
+			datePart := colorizeWithBg(strings.TrimPrefix(dateSuffix, " "), colorGray, bgGray)
+
+			// Build the line with consistent background
+			line := fmt.Sprintf("%s #%-4d %s", tag, iss.Number, titlePart)
+			if labels != "" {
+				line += " " + labelsPart
+			}
+			if dateSuffix != "" {
+				line += " " + datePart
+			}
+			fmt.Println(line)
 		} else {
-			title = colorize(iss.Title, style.titleColor)
-			tag = colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+			title := colorize(iss.Title, style.titleColor)
+			tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+			fmt.Printf("%s #%-4d %s%s%s\n", tag, iss.Number, title, labels, dateSuffix)
 		}
-		fmt.Printf("%s #%-4d %s%s%s\n", tag, iss.Number, title, labels, dateSuffix)
 	}
 
 	fmt.Printf("\nTotal: %d issues\n", len(issues))

@@ -226,8 +226,8 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, ref
 		titleColor string
 	}{
 		issue.StateOpen:   {"[open]", "", ""},
-		issue.StateWip:    {"[wip]", colorYellow, colorBrightYellow},
-		issue.StateDone:   {"[done]", colorGreen, colorBrightGreen},
+		issue.StateWip:    {"[wip]", colorBrightYellow, colorBrightYellow},
+		issue.StateDone:   {"[done]", colorBrightGreen, colorBrightGreen},
 		issue.StateClosed: {"[closed]", colorGray, colorLightGray},
 	}
 
@@ -259,18 +259,33 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, ref
 		// 제목에 키워드 하이라이트 적용
 		title := highlightKeyword(iss.Title, keyword)
 
-		var tag string
 		if recentlyClosed {
-			// Apply inverted colors for recently closed issues
-			title = colorizeInvert(title, style.titleColor)
-			tag = colorizeInvert(fmt.Sprintf("%-8s", style.tag), style.color)
+			// Apply background color for entire row of recently closed issues
+			tag := colorizeWithBg(fmt.Sprintf("%-8s", style.tag), style.color, bgGray)
+			titlePart := colorizeWithBg(title, style.titleColor, bgGray)
+			labelsPart := colorizeWithBg(labels, "", bgGray)
+			refPart := colorizeWithBg(strings.TrimPrefix(refSuffix, " "), colorGray, bgGray)
+			datePart := colorizeWithBg(strings.TrimPrefix(dateSuffix, " "), colorGray, bgGray)
+
+			// Build the line with consistent background
+			line := fmt.Sprintf("%s #%-4d %s", tag, iss.Number, titlePart)
+			if labels != "" {
+				line += " " + labelsPart
+			}
+			if refSuffix != "" {
+				line += " " + refPart
+			}
+			if dateSuffix != "" {
+				line += " " + datePart
+			}
+			fmt.Println(line)
 		} else {
 			// 상태별 밝은 색상을 제목에 적용
 			title = colorize(title, style.titleColor)
-			// 태그를 색상 적용 후 출력, 나머지는 기본 색상
-			tag = colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+			// 태그를 색상 적용 후 출력
+			tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+			fmt.Printf("%s #%-4d %s%s%s%s\n", tag, iss.Number, title, labels, refSuffix, dateSuffix)
 		}
-		fmt.Printf("%s #%-4d %s%s%s%s\n", tag, iss.Number, title, labels, refSuffix, dateSuffix)
 	}
 
 	if skippedCount > 0 {
@@ -289,8 +304,8 @@ func printMultiProjectIssueList(issues []*project.ProjectIssue, skippedCount int
 		titleColor string
 	}{
 		issue.StateOpen:   {"[open]", "", ""},
-		issue.StateWip:    {"[wip]", colorYellow, colorBrightYellow},
-		issue.StateDone:   {"[done]", colorGreen, colorBrightGreen},
+		issue.StateWip:    {"[wip]", colorBrightYellow, colorBrightYellow},
+		issue.StateDone:   {"[done]", colorBrightGreen, colorBrightGreen},
 		issue.StateClosed: {"[closed]", colorGray, colorLightGray},
 	}
 
