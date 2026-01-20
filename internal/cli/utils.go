@@ -73,14 +73,14 @@ func getAIClient(aiFlag string) (ai.Client, error) {
 	return client, nil
 }
 
-// formatRelativeTime formats a time as relative time string (e.g., "2시간 전", "3일 전")
+// formatRelativeTime formats a time as relative time string (e.g., "2 hr ago", "3 days ago")
 func formatRelativeTime(t time.Time) string {
 	now := time.Now()
 	diff := now.Sub(t)
 
 	// Future time
 	if diff < 0 {
-		return "방금"
+		return "just now"
 	}
 
 	seconds := int(diff.Seconds())
@@ -93,18 +93,30 @@ func formatRelativeTime(t time.Time) string {
 
 	switch {
 	case seconds < 60:
-		return "방금"
+		return "just now"
 	case minutes < 60:
-		return fmt.Sprintf("%d분 전", minutes)
+		return fmt.Sprintf("%d min ago", minutes)
 	case hours < 24:
-		return fmt.Sprintf("%d시간 전", hours)
+		return fmt.Sprintf("%d hr ago", hours)
 	case days < 7:
-		return fmt.Sprintf("%d일 전", days)
+		if days == 1 {
+			return "1 day ago"
+		}
+		return fmt.Sprintf("%d days ago", days)
 	case weeks < 4:
-		return fmt.Sprintf("%d주 전", weeks)
+		if weeks == 1 {
+			return "1 week ago"
+		}
+		return fmt.Sprintf("%d weeks ago", weeks)
 	case months < 12:
-		return fmt.Sprintf("%d개월 전", months)
+		if months == 1 {
+			return "1 month ago"
+		}
+		return fmt.Sprintf("%d months ago", months)
 	default:
-		return fmt.Sprintf("%d년 전", years)
+		if years == 1 {
+			return "1 year ago"
+		}
+		return fmt.Sprintf("%d years ago", years)
 	}
 }

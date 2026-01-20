@@ -67,6 +67,10 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	var debounceTimer *time.Timer
 	debounceDuration := 100 * time.Millisecond
 
+	// Periodic refresh ticker (1 minute) to update relative times
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-sigChan:
@@ -74,6 +78,10 @@ func runWatch(cmd *cobra.Command, args []string) error {
 			fmt.Print("\033[H\033[2J")
 			fmt.Println("Watch mode exited.")
 			return nil
+
+		case <-ticker.C:
+			// Periodic refresh to update relative times
+			renderWatch(dir)
 
 		case event, ok := <-watcher.Events:
 			if !ok {
