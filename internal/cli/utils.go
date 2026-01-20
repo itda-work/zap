@@ -4,11 +4,38 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/itda-work/zap/internal/ai"
 )
+
+const (
+	// DefaultRecentClosedMinutes is the default duration (in minutes) to show recently closed issues
+	DefaultRecentClosedMinutes = 5
+	// EnvRecentClosedMinutes is the environment variable name for configuring recent closed duration
+	EnvRecentClosedMinutes = "ZAP_RECENT_CLOSED_MINUTES"
+)
+
+// getRecentClosedDuration returns the duration for which recently closed/done issues should be displayed.
+// It reads from ZAP_RECENT_CLOSED_MINUTES environment variable, defaulting to 5 minutes.
+func getRecentClosedDuration() time.Duration {
+	if val := os.Getenv(EnvRecentClosedMinutes); val != "" {
+		if minutes, err := strconv.Atoi(val); err == nil && minutes >= 0 {
+			return time.Duration(minutes) * time.Minute
+		}
+	}
+	return DefaultRecentClosedMinutes * time.Minute
+}
+
+// isRecentlyClosed checks if an issue was recently closed (done or closed state) within the given duration.
+func isRecentlyClosed(updatedAt time.Time, state string, duration time.Duration) bool {
+	if state != "done" && state != "closed" {
+		return false
+	}
+	return time.Since(updatedAt) <= duration
+}
 
 // confirm prompts the user for yes/no confirmation.
 func confirm(prompt string) bool {

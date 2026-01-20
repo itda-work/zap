@@ -156,10 +156,19 @@ func renderWatch(dir string) {
 		return
 	}
 
+	// Include recently closed issues if not showing all and not filtering by specific state
+	recentClosedDuration := getRecentClosedDuration()
+	if !watchAll && watchState == "" && recentClosedDuration > 0 {
+		recentIssues, err := getRecentlyClosedIssuesForWatch(store, recentClosedDuration, watchLabel, watchAssignee)
+		if err == nil && len(recentIssues) > 0 {
+			issues = mergeIssues(issues, recentIssues)
+		}
+	}
+
 	if len(issues) == 0 {
 		fmt.Println(colorize("No active issues.", colorGray))
 	} else {
-		printWatchIssueList(issues)
+		printWatchIssueList(issues, recentClosedDuration)
 	}
 
 	// Print footer with last updated time
@@ -178,7 +187,7 @@ func printWatchStats(stats *issue.Stats) {
 	fmt.Println(strings.Join(parts, " | "))
 }
 
-func printWatchIssueList(issues []*issue.Issue) {
+func printWatchIssueList(issues []*issue.Issue, recentClosedDuration time.Duration) {
 	stateStyle := map[issue.State]struct {
 		tag        string
 		color      string
@@ -203,10 +212,50 @@ func printWatchIssueList(issues []*issue.Issue) {
 			dateSuffix = fmt.Sprintf(" %s", colorize(formatRelativeTime(iss.UpdatedAt), colorGray))
 		}
 
-		title := colorize(iss.Title, style.titleColor)
-		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+		// Check if this is a recently closed issue
+		recentlyClosed := isRecentlyClosed(iss.UpdatedAt, string(iss.State), recentClosedDuration)
+
+		var title, tag string
+		if recentlyClosed {
+			// Apply inverted colors for recently closed issues
+			title = colorizeInvert(iss.Title, style.titleColor)
+			tag = colorizeInvert(fmt.Sprintf("%-8s", style.tag), style.color)
+		} else {
+			title = colorize(iss.Title, style.titleColor)
+			tag = colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+		}
 		fmt.Printf("%s #%-4d %s%s%s\n", tag, iss.Number, title, labels, dateSuffix)
 	}
 
 	fmt.Printf("\nTotal: %d issues\n", len(issues))
+}
+
+// getRecentlyClosedIssuesForWatch returns done/closed issues that were updated within the given duration
+func getRecentlyClosedIssuesForWatch(store *issue.Store, duration time.Duration, labelFilter, assigneeFilter string) ([]*issue.Issue, error) {
+	closedStates := []issue.State{issue.StateDone, issue.StateClosed}
+
+	var issues []*issue.Issue
+	var err error
+
+	if labelFilter != "" {
+		issues, err = store.FilterByLabel(labelFilter, closedStates...)
+	} else if assigneeFilter != "" {
+		issues, err = store.FilterByAssignee(assigneeFilter, closedStates...)
+	} else {
+		issues, err = store.List(closedStates...)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter to only recently closed issues
+	var recentIssues []*issue.Issue
+	for _, iss := range issues {
+		if isRecentlyClosed(iss.UpdatedAt, string(iss.State), duration) {
+			recentIssues = append(recentIssues, iss)
+		}
+	}
+
+	return recentIssues, nil
 }

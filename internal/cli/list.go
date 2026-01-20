@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/itda-work/zap/internal/issue"
 	"github.com/itda-work/zap/internal/project"
@@ -99,6 +100,15 @@ func runList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to list issues: %w", err)
 	}
 
+	// Include recently closed issues if not showing all and not filtering by specific state
+	recentClosedDuration := getRecentClosedDuration()
+	if !listAll && listState == "" && recentClosedDuration > 0 {
+		recentIssues, err := getRecentlyClosedIssues(store, recentClosedDuration, listLabel, listAssignee)
+		if err == nil && len(recentIssues) > 0 {
+			issues = mergeIssues(issues, recentIssues)
+		}
+	}
+
 	// Apply search filter if specified
 	if listSearch != "" {
 		issues = filterBySearch(issues, listSearch, listTitleOnly)
@@ -130,7 +140,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(issues) > 0 {
-		printIssueList(issues, len(warnings), listSearch, refGraph, false)
+		printIssueList(issues, len(warnings), listSearch, refGraph, recentClosedDuration)
 	}
 
 	// Print warnings unless --quiet is set
@@ -208,7 +218,7 @@ func runMultiProjectList(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, refGraph *issue.RefGraph, multiProject bool) {
+func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, refGraph *issue.RefGraph, recentClosedDuration time.Duration) {
 	// 상태별 텍스트 태그와 색상
 	stateStyle := map[issue.State]struct {
 		tag        string
@@ -243,13 +253,23 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, ref
 			dateSuffix = fmt.Sprintf(" %s", colorize(formatRelativeTime(iss.UpdatedAt), colorGray))
 		}
 
+		// Check if this is a recently closed issue
+		recentlyClosed := isRecentlyClosed(iss.UpdatedAt, string(iss.State), recentClosedDuration)
+
 		// 제목에 키워드 하이라이트 적용
 		title := highlightKeyword(iss.Title, keyword)
-		// 상태별 밝은 색상을 제목에 적용
-		title = colorize(title, style.titleColor)
 
-		// 태그를 색상 적용 후 출력, 나머지는 기본 색상
-		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+		var tag string
+		if recentlyClosed {
+			// Apply inverted colors for recently closed issues
+			title = colorizeInvert(title, style.titleColor)
+			tag = colorizeInvert(fmt.Sprintf("%-8s", style.tag), style.color)
+		} else {
+			// 상태별 밝은 색상을 제목에 적용
+			title = colorize(title, style.titleColor)
+			// 태그를 색상 적용 후 출력, 나머지는 기본 색상
+			tag = colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+		}
 		fmt.Printf("%s #%-4d %s%s%s%s\n", tag, iss.Number, title, labels, refSuffix, dateSuffix)
 	}
 
@@ -423,4 +443,54 @@ func highlightKeyword(text, keyword string) string {
 	after := text[idx+len(keyword):]
 
 	return before + "\033[1m" + match + colorReset + after
+}
+
+// getRecentlyClosedIssues returns done/closed issues that were updated within the given duration
+func getRecentlyClosedIssues(store *issue.Store, duration time.Duration, labelFilter, assigneeFilter string) ([]*issue.Issue, error) {
+	closedStates := []issue.State{issue.StateDone, issue.StateClosed}
+
+	var issues []*issue.Issue
+	var err error
+
+	if labelFilter != "" {
+		issues, err = store.FilterByLabel(labelFilter, closedStates...)
+	} else if assigneeFilter != "" {
+		issues, err = store.FilterByAssignee(assigneeFilter, closedStates...)
+	} else {
+		issues, err = store.List(closedStates...)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter to only recently closed issues
+	var recentIssues []*issue.Issue
+	for _, iss := range issues {
+		if isRecentlyClosed(iss.UpdatedAt, string(iss.State), duration) {
+			recentIssues = append(recentIssues, iss)
+		}
+	}
+
+	return recentIssues, nil
+}
+
+// mergeIssues merges two issue slices, avoiding duplicates based on issue number
+func mergeIssues(base, additional []*issue.Issue) []*issue.Issue {
+	seen := make(map[int]bool)
+	for _, iss := range base {
+		seen[iss.Number] = true
+	}
+
+	result := make([]*issue.Issue, len(base))
+	copy(result, base)
+
+	for _, iss := range additional {
+		if !seen[iss.Number] {
+			result = append(result, iss)
+			seen[iss.Number] = true
+		}
+	}
+
+	return result
 }
