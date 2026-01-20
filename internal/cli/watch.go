@@ -176,6 +176,8 @@ func renderWatch(dir string) {
 	if len(issues) == 0 {
 		fmt.Println(colorize("No active issues.", colorGray))
 	} else {
+		// Sort by state priority (done → closed → wip → open), then by UpdatedAt descending
+		sortIssuesByStateAndTime(issues)
 		printWatchIssueList(issues, recentClosedDuration)
 	}
 

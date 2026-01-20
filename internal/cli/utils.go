@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/itda-work/zap/internal/ai"
+	"github.com/itda-work/zap/internal/issue"
+	"github.com/itda-work/zap/internal/project"
 )
 
 const (
@@ -119,4 +122,50 @@ func formatRelativeTime(t time.Time) string {
 		}
 		return fmt.Sprintf("%d years ago", years)
 	}
+}
+
+// statePriority returns the priority for sorting issues by state.
+// Lower value = appears first in the list.
+// Order: done(0) → closed(1) → wip(2) → open(3)
+func statePriority(state issue.State) int {
+	switch state {
+	case issue.StateDone:
+		return 0
+	case issue.StateClosed:
+		return 1
+	case issue.StateWip:
+		return 2
+	case issue.StateOpen:
+		return 3
+	default:
+		return 4
+	}
+}
+
+// sortIssuesByStateAndTime sorts issues by state priority, then by UpdatedAt descending.
+// State order: done → closed → wip → open
+// Within each state group: most recently updated first
+func sortIssuesByStateAndTime(issues []*issue.Issue) {
+	sort.Slice(issues, func(i, j int) bool {
+		pi, pj := statePriority(issues[i].State), statePriority(issues[j].State)
+		if pi != pj {
+			return pi < pj
+		}
+		// Same state: sort by UpdatedAt descending
+		return issues[i].UpdatedAt.After(issues[j].UpdatedAt)
+	})
+}
+
+// sortProjectIssuesByStateAndTime sorts project issues by state priority, then by UpdatedAt descending.
+// State order: done → closed → wip → open
+// Within each state group: most recently updated first
+func sortProjectIssuesByStateAndTime(issues []*project.ProjectIssue) {
+	sort.Slice(issues, func(i, j int) bool {
+		pi, pj := statePriority(issues[i].State), statePriority(issues[j].State)
+		if pi != pj {
+			return pi < pj
+		}
+		// Same state: sort by UpdatedAt descending
+		return issues[i].UpdatedAt.After(issues[j].UpdatedAt)
+	})
 }

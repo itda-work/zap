@@ -140,6 +140,8 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(issues) > 0 {
+		// Sort by state priority (done → closed → wip → open), then by UpdatedAt descending
+		sortIssuesByStateAndTime(issues)
 		printIssueList(issues, len(warnings), listSearch, refGraph, recentClosedDuration)
 	}
 
@@ -207,6 +209,8 @@ func runMultiProjectList(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(projectIssues) > 0 {
+		// Sort by state priority (done → closed → wip → open), then by UpdatedAt descending
+		sortProjectIssuesByStateAndTime(projectIssues)
 		printMultiProjectIssueList(projectIssues, len(warnings), listSearch)
 	}
 

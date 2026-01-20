@@ -104,9 +104,9 @@ func (s *Store) List(states ...State) ([]*Issue, error) {
 		}
 		s.warnings = flatFailures
 
-		// Sort by created_at descending (newest first)
+		// Sort by updated_at descending (most recently updated first)
 		sort.Slice(filtered, func(i, j int) bool {
-			return filtered[i].CreatedAt.After(filtered[j].CreatedAt)
+			return filtered[i].UpdatedAt.After(filtered[j].UpdatedAt)
 		})
 
 		return filtered, nil
@@ -129,9 +129,9 @@ func (s *Store) List(states ...State) ([]*Issue, error) {
 		s.warnings = append(s.warnings, failures...)
 	}
 
-	// Sort by created_at descending (newest first)
+	// Sort by updated_at descending (most recently updated first)
 	sort.Slice(issues, func(i, j int) bool {
-		return issues[i].CreatedAt.After(issues[j].CreatedAt)
+		return issues[i].UpdatedAt.After(issues[j].UpdatedAt)
 	})
 
 	return issues, nil
