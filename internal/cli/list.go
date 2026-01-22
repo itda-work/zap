@@ -72,6 +72,15 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 	store := issue.NewStore(dir)
 
+	// Get all issues for statistics and print stats header
+	allIssues, err := store.List(issue.AllStates()...)
+	if err != nil {
+		return fmt.Errorf("failed to list issues: %w", err)
+	}
+	stats := calculateStats(allIssues)
+	printWatchStats(stats)
+	fmt.Println(strings.Repeat("─", 60))
+
 	var states []issue.State
 
 	if listState != "" {
@@ -159,6 +168,19 @@ func runMultiProjectList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	// Get all issues for statistics and print stats header
+	allProjectIssues, err := multiStore.ListAll(issue.AllStates()...)
+	if err != nil {
+		return fmt.Errorf("failed to list issues: %w", err)
+	}
+	allIssues := make([]*issue.Issue, len(allProjectIssues))
+	for i, pIss := range allProjectIssues {
+		allIssues[i] = pIss.Issue
+	}
+	stats := calculateStats(allIssues)
+	printWatchStats(stats)
+	fmt.Println(strings.Repeat("─", 60))
 
 	var states []issue.State
 	if listState != "" {
