@@ -1,12 +1,13 @@
 ---
 number: 49
 title: Homebrew 및 winget 패키지 등록 가이드 문서 작성
-state: open
+state: done
 labels:
     - docs
 assignees: []
 created_at: "2026-01-24T13:55:11Z"
-updated_at: "2026-01-24T13:55:11Z"
+updated_at: "2026-01-24T13:58:42Z"
+closed_at: "2026-01-24T13:58:42Z"
 ---
 
 ## 개요
