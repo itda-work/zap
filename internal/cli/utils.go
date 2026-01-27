@@ -126,24 +126,28 @@ func formatRelativeTime(t time.Time) string {
 
 // statePriority returns the priority for sorting issues by state.
 // Lower value = appears first in the list.
-// Order: done(0) → closed(1) → wip(2) → open(3)
+// Order: done(0) → closed(1) → review(2) → check(3) → wip(4) → open(5)
 func statePriority(state issue.State) int {
 	switch state {
 	case issue.StateDone:
 		return 0
 	case issue.StateClosed:
 		return 1
-	case issue.StateWip:
+	case issue.StateReview:
 		return 2
-	case issue.StateOpen:
+	case issue.StateCheck:
 		return 3
-	default:
+	case issue.StateWip:
 		return 4
+	case issue.StateOpen:
+		return 5
+	default:
+		return 6
 	}
 }
 
 // sortIssuesByStateAndTime sorts issues by state priority, then by UpdatedAt descending.
-// State order: done → closed → wip → open
+// State order: done → closed → review → check → wip → open
 // Within each state group: most recently updated first
 func sortIssuesByStateAndTime(issues []*issue.Issue) {
 	sort.Slice(issues, func(i, j int) bool {
@@ -157,7 +161,7 @@ func sortIssuesByStateAndTime(issues []*issue.Issue) {
 }
 
 // sortProjectIssuesByStateAndTime sorts project issues by state priority, then by UpdatedAt descending.
-// State order: done → closed → wip → open
+// State order: done → closed → review → check → wip → open
 // Within each state group: most recently updated first
 func sortProjectIssuesByStateAndTime(issues []*project.ProjectIssue) {
 	sort.Slice(issues, func(i, j int) bool {

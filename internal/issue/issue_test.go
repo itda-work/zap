@@ -10,6 +10,8 @@ func TestParseState(t *testing.T) {
 	}{
 		{"open", StateOpen, true},
 		{"wip", StateWip, true},
+		{"check", StateCheck, true},
+		{"review", StateReview, true},
 		{"done", StateDone, true},
 		{"closed", StateClosed, true},
 		{"in-progress", "", false}, // in-progress is no longer supported
@@ -32,11 +34,11 @@ func TestParseState(t *testing.T) {
 
 func TestAllStates(t *testing.T) {
 	states := AllStates()
-	if len(states) != 4 {
-		t.Errorf("AllStates() returned %d states, want 4", len(states))
+	if len(states) != 6 {
+		t.Errorf("AllStates() returned %d states, want 6", len(states))
 	}
 
-	expected := []State{StateOpen, StateWip, StateDone, StateClosed}
+	expected := []State{StateOpen, StateWip, StateCheck, StateReview, StateDone, StateClosed}
 	for i, s := range expected {
 		if states[i] != s {
 			t.Errorf("AllStates()[%d] = %q, want %q", i, states[i], s)
@@ -46,12 +48,15 @@ func TestAllStates(t *testing.T) {
 
 func TestActiveStates(t *testing.T) {
 	states := ActiveStates()
-	if len(states) != 2 {
-		t.Errorf("ActiveStates() returned %d states, want 2", len(states))
+	if len(states) != 4 {
+		t.Errorf("ActiveStates() returned %d states, want 4", len(states))
 	}
 
-	if states[0] != StateOpen || states[1] != StateWip {
-		t.Errorf("ActiveStates() = %v, want [open, wip]", states)
+	expected := []State{StateOpen, StateWip, StateCheck, StateReview}
+	for i, s := range expected {
+		if states[i] != s {
+			t.Errorf("ActiveStates()[%d] = %q, want %q", i, states[i], s)
+		}
 	}
 }
 
@@ -62,6 +67,8 @@ func TestStateDir(t *testing.T) {
 	}{
 		{StateOpen, "open"},
 		{StateWip, "wip"},
+		{StateCheck, "check"},
+		{StateReview, "review"},
 		{StateDone, "done"},
 		{StateClosed, "closed"},
 	}
@@ -83,6 +90,8 @@ func TestIssueIsActive(t *testing.T) {
 	}{
 		{StateOpen, true},
 		{StateWip, true},
+		{StateCheck, true},
+		{StateReview, true},
 		{StateDone, false},
 		{StateClosed, false},
 	}

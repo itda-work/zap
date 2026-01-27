@@ -30,9 +30,11 @@ const (
 	colorCyanDark   = "\033[36m"
 	colorGrayDark   = "\033[90m"
 
-	colorBrightGreenDark  = "\033[92m"
-	colorBrightYellowDark = "\033[93m"
-	colorLightGrayDark    = "\033[37m"
+	colorMagentaDark       = "\033[35m"
+	colorBrightMagentaDark = "\033[95m"
+	colorBrightGreenDark   = "\033[92m"
+	colorBrightYellowDark  = "\033[93m"
+	colorLightGrayDark     = "\033[37m"
 
 	bgGrayDark = "\033[48;5;238m" // Dark gray background
 
@@ -45,9 +47,10 @@ const (
 	colorGrayLight   = "\033[90m"
 
 	// Darker variants for light theme (more contrast)
-	colorDarkGreen  = "\033[38;5;22m"  // Dark green
-	colorDarkYellow = "\033[38;5;136m" // Dark yellow/olive
-	colorDarkGray   = "\033[38;5;240m" // Darker gray
+	colorDarkGreen   = "\033[38;5;22m"  // Dark green
+	colorDarkYellow  = "\033[38;5;136m" // Dark yellow/olive
+	colorDarkGray    = "\033[38;5;240m" // Darker gray
+	colorDarkMagenta = "\033[38;5;127m" // Dark magenta
 
 	bgGrayLight = "\033[48;5;253m" // Light gray background for light theme
 
@@ -64,6 +67,8 @@ var (
 	colorCyan   string
 	colorGray   string
 
+	colorMagenta      string
+	colorBrightMagenta string
 	colorBrightGreen  string
 	colorBrightYellow string
 	colorLightGray    string
@@ -243,6 +248,8 @@ func applyThemeColors(theme Theme) {
 		colorBlue = colorBlueLight
 		colorCyan = colorCyanLight
 		colorGray = colorDarkGray
+		colorMagenta = colorDarkMagenta
+		colorBrightMagenta = colorDarkMagenta
 
 		colorBrightGreen = colorDarkGreen   // Use dark green for light theme
 		colorBrightYellow = colorDarkYellow // Use dark yellow for light theme
@@ -257,6 +264,8 @@ func applyThemeColors(theme Theme) {
 		colorBlue = colorBlueDark
 		colorCyan = colorCyanDark
 		colorGray = colorGrayDark
+		colorMagenta = colorMagentaDark
+		colorBrightMagenta = colorBrightMagentaDark
 
 		colorBrightGreen = colorBrightGreenDark
 		colorBrightYellow = colorBrightYellowDark

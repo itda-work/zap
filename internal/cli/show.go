@@ -518,6 +518,10 @@ func stateColor(s issue.State) string {
 	switch s {
 	case issue.StateWip:
 		return colorYellow
+	case issue.StateCheck:
+		return colorCyan
+	case issue.StateReview:
+		return colorMagenta
 	case issue.StateDone:
 		return colorGreen
 	case issue.StateClosed:

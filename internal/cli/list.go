@@ -13,7 +13,7 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List issues",
-	Long:  `List issues from the .issues directory. By default shows active issues (open + wip).`,
+	Long:  `List issues from the .issues directory. By default shows active issues (open + wip + check + review).`,
 	Aliases: []string{"ls"},
 	RunE:    runList,
 }
@@ -35,7 +35,7 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 
 	listCmd.Flags().BoolVarP(&listAll, "all", "a", false, "Show all issues including done and closed")
-	listCmd.Flags().StringVarP(&listState, "state", "s", "", "Filter by state (open, wip, done, closed)")
+	listCmd.Flags().StringVarP(&listState, "state", "s", "", "Filter by state (open, wip, check, review, done, closed)")
 	listCmd.Flags().StringVarP(&listLabel, "label", "l", "", "Filter by label")
 	listCmd.Flags().StringVar(&listAssignee, "assignee", "", "Filter by assignee")
 	listCmd.Flags().BoolVarP(&listQuiet, "quiet", "q", false, "Suppress parse failure warnings")
@@ -149,7 +149,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(issues) > 0 {
-		// Sort by state priority (done → closed → wip → open), then by UpdatedAt descending
+		// Sort by state priority (done → closed → review → check → wip → open), then by UpdatedAt descending
 		sortIssuesByStateAndTime(issues)
 		printIssueList(issues, len(warnings), listSearch, refGraph, recentClosedDuration)
 	}
@@ -231,7 +231,7 @@ func runMultiProjectList(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(projectIssues) > 0 {
-		// Sort by state priority (done → closed → wip → open), then by UpdatedAt descending
+		// Sort by state priority (done → closed → review → check → wip → open), then by UpdatedAt descending
 		sortProjectIssuesByStateAndTime(projectIssues)
 		printMultiProjectIssueList(projectIssues, len(warnings), listSearch)
 	}
@@ -253,6 +253,8 @@ func printIssueList(issues []*issue.Issue, skippedCount int, keyword string, ref
 	}{
 		issue.StateOpen:   {"[open]", "", ""},
 		issue.StateWip:    {"[wip]", colorBrightYellow, colorBrightYellow},
+		issue.StateCheck:  {"[check]", colorCyan, colorCyan},
+		issue.StateReview: {"[review]", colorBrightMagenta, colorBrightMagenta},
 		issue.StateDone:   {"[done]", colorBrightGreen, colorBrightGreen},
 		issue.StateClosed: {"[closed]", colorGray, colorLightGray},
 	}
@@ -331,6 +333,8 @@ func printMultiProjectIssueList(issues []*project.ProjectIssue, skippedCount int
 	}{
 		issue.StateOpen:   {"[open]", "", ""},
 		issue.StateWip:    {"[wip]", colorBrightYellow, colorBrightYellow},
+		issue.StateCheck:  {"[check]", colorCyan, colorCyan},
+		issue.StateReview: {"[review]", colorBrightMagenta, colorBrightMagenta},
 		issue.StateDone:   {"[done]", colorBrightGreen, colorBrightGreen},
 		issue.StateClosed: {"[closed]", colorGray, colorLightGray},
 	}

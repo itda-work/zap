@@ -12,7 +12,7 @@
 #### 명령 예시
 
 ```bash
-zap new "제목"              # 새 이슈 생성
+zap new "제목"              # 새 이슈 생성 (PDCA 템플릿 자동 포함)
 zap new "제목" -l label     # 레이블과 함께 생성
 zap new "제목" -a user      # 담당자와 함께 생성
 zap new "제목" -b "본문"    # 본문과 함께 생성
@@ -20,18 +20,33 @@ zap new "제목" -b "본문"    # 본문과 함께 생성
 zap list                    # 목록 조회
 zap show 1                  # 상세보기
 
-# 상태 변경
+# 상태 변경 (PDCA 워크플로우)
 # 상태 변경 시 파일의 frontmatter가 업데이트됩니다 (파일 위치 변경 없음):
 zap set open 1              # state: open (이슈 재오픈)
-zap set wip 1               # state: wip (작업 시작)
-zap set done 1              # state: done (작업 완료)
+zap set wip 1               # state: wip (작업 시작 - Do)
+zap set check 1             # state: check (자기 검증 - Check)
+zap set review 1            # state: review (외부 리뷰 - Review)
+zap set done 1              # state: done (작업 완료 - Act)
 zap set closed 1            # state: closed (취소/보류)
 ```
+
+**PDCA 상태 모델:**
+
+| 상태 | PDCA | 의미 |
+|------|------|------|
+| `open` | Plan | 계획 수립, 작업 대기 |
+| `wip` | Do | 구현 진행 중 |
+| `check` | Check | 자기 검증 (Plan 기준 대비) |
+| `review` | Review | 외부 리뷰, 피드백 수집 |
+| `done` | Act | 완료, 개선 조치 기록 |
+| `closed` | - | 취소/보류 (어느 단계에서든) |
 
 **done vs closed 핵심 구분:**
 
 - 코드를 작성/수정했다 → `done`
 - 작업 없이 닫는다 → `closed`
+
+**갭 발견 시 반복:** check/review에서 갭이 발견되면 `zap set wip <number>`로 되돌려 재작업할 수 있습니다.
 
 ### 커밋 메시지 규칙
 
@@ -62,12 +77,14 @@ Commands: /clarify (요구사항 명확화)"
 - `Commands:` - 사용한 command와 목적 (예: `/clarify (요구사항 정리)`)
 - `Agents:` - 사용한 agent와 목적 (예: `codex-exec (알고리즘 최적화)`)
 
-### 워크플로우
+### 워크플로우 (PDCA)
 
-1. **새 이슈 생성**: `zap new "이슈 제목"` 실행
-2. **작업 시작**: `zap set wip <number>` 실행
-3. **작업 완료**: `zap set done <number>` 실행
-4. **취소/보류**: `zap set closed <number>` 실행
+1. **이슈 생성 (Plan)**: `zap new "이슈 제목"`
+2. **작업 시작 (Do)**: `zap set wip <number>`
+3. **자기 검증 (Check)**: `zap set check <number>`
+4. **외부 리뷰 (Review)**: `zap set review <number>`
+5. **작업 완료 (Act)**: `zap set done <number>`
+6. **취소/보류**: `zap set closed <number>`
 
 ### 주의사항
 

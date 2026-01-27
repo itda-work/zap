@@ -32,7 +32,7 @@ func init() {
 	rootCmd.AddCommand(watchCmd)
 
 	watchCmd.Flags().BoolVarP(&watchAll, "all", "a", false, "Show all issues including done and closed")
-	watchCmd.Flags().StringVarP(&watchState, "state", "s", "", "Filter by state (open, wip, done, closed)")
+	watchCmd.Flags().StringVarP(&watchState, "state", "s", "", "Filter by state (open, wip, check, review, done, closed)")
 	watchCmd.Flags().StringVarP(&watchLabel, "label", "l", "", "Filter by label")
 	watchCmd.Flags().StringVar(&watchAssignee, "assignee", "", "Filter by assignee")
 	watchCmd.Flags().BoolVar(&watchNoDate, "no-date", false, "Hide updated time from output")
@@ -176,7 +176,7 @@ func renderWatch(dir string) {
 	if len(issues) == 0 {
 		fmt.Println(colorize("No active issues.", colorGray))
 	} else {
-		// Sort by state priority (done → closed → wip → open), then by UpdatedAt descending
+		// Sort by state priority (done → closed → review → check → wip → open), then by UpdatedAt descending
 		sortIssuesByStateAndTime(issues)
 		printWatchIssueList(issues, recentClosedDuration)
 	}
@@ -187,10 +187,12 @@ func renderWatch(dir string) {
 }
 
 func printWatchStats(stats *issue.Stats) {
-	// Format: Open: N | WIP: N | Done: N | Closed: N
+	// Format: Open: N | WIP: N | Check: N | Review: N | Done: N | Closed: N
 	parts := []string{
 		fmt.Sprintf("%s: %s", "Open", colorize(fmt.Sprintf("%d", stats.ByState[issue.StateOpen]), "")),
 		fmt.Sprintf("%s: %s", colorize("WIP", colorBrightYellow), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateWip]), colorBrightYellow)),
+		fmt.Sprintf("%s: %s", colorize("Check", colorCyan), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateCheck]), colorCyan)),
+		fmt.Sprintf("%s: %s", colorize("Review", colorBrightMagenta), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateReview]), colorBrightMagenta)),
 		fmt.Sprintf("%s: %s", colorize("Done", colorBrightGreen), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateDone]), colorBrightGreen)),
 		fmt.Sprintf("%s: %s", colorize("Closed", colorGray), colorize(fmt.Sprintf("%d", stats.ByState[issue.StateClosed]), colorGray)),
 	}
@@ -205,6 +207,8 @@ func printWatchIssueList(issues []*issue.Issue, recentClosedDuration time.Durati
 	}{
 		issue.StateOpen:   {"[open]", "", ""},
 		issue.StateWip:    {"[wip]", colorBrightYellow, colorBrightYellow},
+		issue.StateCheck:  {"[check]", colorCyan, colorCyan},
+		issue.StateReview: {"[review]", colorBrightMagenta, colorBrightMagenta},
 		issue.StateDone:   {"[done]", colorBrightGreen, colorBrightGreen},
 		issue.StateClosed: {"[closed]", colorGray, colorLightGray},
 	}

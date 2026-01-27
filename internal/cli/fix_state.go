@@ -19,7 +19,7 @@ var fixStateCmd = &cobra.Command{
 This command finds issues with deprecated or invalid states (e.g., "in-progress")
 and helps convert them to valid states (e.g., "wip").
 
-Valid states: open, wip, done, closed
+Valid states: open, wip, check, review, done, closed
 
 Examples:
   zap fix-state              # Interactive mode - asks before fixing
@@ -45,6 +45,11 @@ var knownStateMappings = map[string]issue.State{
 	"progress":    issue.StateWip,
 	"working":     issue.StateWip,
 	"started":     issue.StateWip,
+	"checking":    issue.StateCheck,
+	"verify":      issue.StateCheck,
+	"verified":    issue.StateCheck,
+	"reviewing":   issue.StateReview,
+	"reviewed":    issue.StateReview,
 	"complete":    issue.StateDone,
 	"completed":   issue.StateDone,
 	"finished":    issue.StateDone,

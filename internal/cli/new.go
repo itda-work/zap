@@ -53,7 +53,7 @@ func init() {
 	newCmd.Flags().StringArrayVarP(&newAssignees, "assignee", "a", nil, "Add assignee (can be used multiple times)")
 	newCmd.Flags().StringVarP(&newBody, "body", "b", "", "Issue body content")
 	newCmd.Flags().BoolVarP(&newEditor, "editor", "e", false, "Open editor to write issue body")
-	newCmd.Flags().StringVarP(&newState, "state", "s", "open", "Initial state (open, wip, done, closed)")
+	newCmd.Flags().StringVarP(&newState, "state", "s", "open", "Initial state (open, wip, check, review, done, closed)")
 	newCmd.Flags().StringVarP(&newProject, "project", "p", "", "Project alias (required for multi-project mode)")
 }
 
@@ -66,7 +66,7 @@ func runNew(cmd *cobra.Command, args []string) error {
 	// Validate state
 	state, ok := issue.ParseState(newState)
 	if !ok {
-		return fmt.Errorf("invalid state: %s (valid: open, wip, done, closed)", newState)
+		return fmt.Errorf("invalid state: %s (valid: open, wip, check, review, done, closed)", newState)
 	}
 
 	// Check for multi-project mode
@@ -135,6 +135,9 @@ func runNew(cmd *cobra.Command, args []string) error {
 		}
 		body = editedBody
 	}
+
+	// Append PDCA template
+	body = appendPDCATemplate(body)
 
 	// Create issue struct
 	now := time.Now().UTC()
@@ -364,6 +367,9 @@ func createIssueInProject(proj *project.Project, issuesDir string, title string,
 		body = editedBody
 	}
 
+	// Append PDCA template
+	body = appendPDCATemplate(body)
+
 	// Create issue struct
 	now := time.Now().UTC()
 	iss := &issue.Issue{
@@ -395,4 +401,37 @@ func createIssueInProject(proj *project.Project, issuesDir string, title string,
 
 	fmt.Printf("✅ Created %s/#%d: %s\n", proj.Alias, nextNumber, filename)
 	return nil
+}
+
+// pdcaTemplate is the PDCA cycle template for issue body
+const pdcaTemplate = `## Cycle 1
+
+### Plan
+- 목표:
+- 성공 기준:
+- 접근 방식:
+
+### Do
+(구현 내용 기록)
+
+### Check
+- 설계 대비 일치도:
+- 발견된 갭:
+- 테스트 결과:
+
+### Review
+- 리뷰어:
+- 피드백:
+
+### Act
+- 개선 조치:
+- 다음 사이클 필요 여부:
+`
+
+// appendPDCATemplate appends PDCA template to the body
+func appendPDCATemplate(body string) string {
+	if body == "" {
+		return pdcaTemplate
+	}
+	return body + "\n\n" + pdcaTemplate
 }

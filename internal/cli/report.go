@@ -511,9 +511,11 @@ func formatReportMarkdown(data *ReportData) string {
 			byState[iss.State] = append(byState[iss.State], iss)
 		}
 
-		stateOrder := []issue.State{issue.StateDone, issue.StateWip, issue.StateOpen, issue.StateClosed}
+		stateOrder := []issue.State{issue.StateDone, issue.StateReview, issue.StateCheck, issue.StateWip, issue.StateOpen, issue.StateClosed}
 		stateNames := map[issue.State]string{
 			issue.StateDone:   "완료 (done)",
+			issue.StateReview: "리뷰 중 (review)",
+			issue.StateCheck:  "검증 중 (check)",
 			issue.StateWip:    "진행 중 (wip)",
 			issue.StateOpen:   "신규 (open)",
 			issue.StateClosed: "취소 (closed)",
