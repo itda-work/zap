@@ -42,7 +42,6 @@ zap set closed 1            # state: closed (취소/보류)
 | `closed` | - | 취소/보류 (어느 단계에서든) |
 
 **done vs closed 핵심 구분:**
-
 - 코드를 작성/수정했다 → `done`
 - 작업 없이 닫는다 → `closed`
 
@@ -59,8 +58,7 @@ git commit -m "fix: 버그 수정 (#23)"
 
 **Skills/Commands/Agents 사용 기록 (선택사항):**
 
-이슈 작업 중 skills, commands, agents를 사용한 경우, 커밋 메시지 하단(footer)에 기록하면 작업 컨텍스트를 유지하는 데
-도움이 됩니다:
+이슈 작업 중 skills, commands, agents를 사용한 경우, 커밋 메시지 하단(footer)에 기록하면 작업 컨텍스트를 유지하는 데 도움이 됩니다:
 
 ```bash
 git commit -m "feat: 게임 초기화 구조 구현 (#5)
@@ -72,7 +70,6 @@ Commands: /clarify (요구사항 명확화)"
 ```
 
 포함할 정보:
-
 - `Skills:` - 사용한 skill과 목적 (예: `/game:init (프로젝트 템플릿)`)
 - `Commands:` - 사용한 command와 목적 (예: `/clarify (요구사항 정리)`)
 - `Agents:` - 사용한 agent와 목적 (예: `codex-exec (알고리즘 최적화)`)
