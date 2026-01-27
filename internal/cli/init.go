@@ -179,6 +179,24 @@ git commit -m "feat: 로그인 기능 구현 (#1)"
 git commit -m "fix: 버그 수정 (#23)"
 ` + "```" + `
 
+**Skills/Commands/Agents 사용 기록 (선택사항):**
+
+이슈 작업 중 skills, commands, agents를 사용한 경우, 커밋 메시지 하단(footer)에 기록하면 작업 컨텍스트를 유지하는 데 도움이 됩니다:
+
+` + "```bash" + `
+git commit -m "feat: 게임 초기화 구조 구현 (#5)
+
+GDevelop 기반의 프로젝트 구조 설정 및 기본 씬 구성 완료
+
+Skills: /game:init (프로젝트 템플릿 생성)
+Commands: /clarify (요구사항 명확화)"
+` + "```" + `
+
+포함할 정보:
+- ` + "`Skills:`" + ` - 사용한 skill과 목적 (예: ` + "`/game:init (프로젝트 템플릿)`" + `)
+- ` + "`Commands:`" + ` - 사용한 command와 목적 (예: ` + "`/clarify (요구사항 정리)`" + `)
+- ` + "`Agents:`" + ` - 사용한 agent와 목적 (예: ` + "`codex-exec (알고리즘 최적화)`" + `)
+
 ### 워크플로우
 
 1. **새 이슈 생성**: ` + "`zap new \"이슈 제목\"`" + ` 실행
