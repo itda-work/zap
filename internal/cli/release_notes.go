@@ -74,8 +74,8 @@ func runReleaseNotes(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get file stats: %w", err)
 	}
 
-	// Get related issues
-	dir, err := getIssuesDir(cmd)
+	// Get related issues (read-only operation, no confirmation needed)
+	dir, _, err := getIssuesDirWithDiscovery(cmd)
 	if err != nil {
 		return err
 	}

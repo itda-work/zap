@@ -49,6 +49,20 @@ func confirm(prompt string) bool {
 	return response == "y" || response == "yes"
 }
 
+// confirmYesDefault prompts with [Y/n] - Enter defaults to Yes
+func confirmYesDefault(prompt string) bool {
+	fmt.Printf("%s [Y/n]: ", prompt)
+	reader := bufio.NewReader(os.Stdin)
+	response, _ := reader.ReadString('\n')
+	response = strings.ToLower(strings.TrimSpace(response))
+
+	// Empty or "y" or "yes" = true
+	if response == "" || response == "y" || response == "yes" {
+		return true
+	}
+	return false
+}
+
 // getAIClient returns an AI client based on the provided flag or auto-detection.
 func getAIClient(aiFlag string) (ai.Client, error) {
 	cfg, err := ai.LoadConfig()

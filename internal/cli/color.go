@@ -280,6 +280,11 @@ func GetCurrentTheme() Theme {
 	return currentTheme
 }
 
+// IsTTY returns true if stdin is a terminal
+func IsTTY() bool {
+	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
+}
+
 // colorize wraps text with ANSI color codes if color is enabled
 func colorize(text, color string) string {
 	if !colorEnabled || color == "" {

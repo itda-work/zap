@@ -69,20 +69,68 @@ func getProjectDir(cmd *cobra.Command) (string, error) {
 	return basePath, nil
 }
 
-// getIssuesDir returns the issues directory path, combining -C and -d flags
-// This is used for single-project mode (backward compatibility)
-func getIssuesDir(cmd *cobra.Command) (string, error) {
+// findIssuesDir walks up the directory tree to find .issues/ directory
+// Returns (path, wasDiscovered)
+func findIssuesDir(startDir string) (string, bool) {
+	issuesDir := ".issues"
+	currentDir := startDir
+
+	// First check current directory
+	if stat, err := os.Stat(filepath.Join(currentDir, issuesDir)); err == nil && stat.IsDir() {
+		return filepath.Join(currentDir, issuesDir), false
+	}
+
+	// Walk up to parent directories
+	for {
+		parent := filepath.Dir(currentDir)
+		if parent == currentDir {
+			// Reached root
+			break
+		}
+		currentDir = parent
+
+		checkPath := filepath.Join(currentDir, issuesDir)
+		if stat, err := os.Stat(checkPath); err == nil && stat.IsDir() {
+			return checkPath, true
+		}
+	}
+
+	// Not found - return default
+	return filepath.Join(startDir, issuesDir), false
+}
+
+// getIssuesDirWithDiscovery returns (path, wasDiscovered, error)
+func getIssuesDirWithDiscovery(cmd *cobra.Command) (string, bool, error) {
 	projectDir, err := getProjectDir(cmd)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	issuesDir, _ := cmd.Flags().GetString("dir")
 
-	if projectDir != "" {
-		return filepath.Join(projectDir, issuesDir), nil
+	// If -C or -d flags explicitly set, don't do walk-up
+	if cmd.Flags().Changed("dir") || cmd.Flags().Changed("project") {
+		if projectDir != "" {
+			return filepath.Join(projectDir, issuesDir), false, nil
+		}
+		return issuesDir, false, nil
 	}
-	return issuesDir, nil
+
+	// Do walk-up discovery
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", false, err
+	}
+
+	path, discovered := findIssuesDir(cwd)
+	return path, discovered, nil
+}
+
+// getIssuesDir returns the issues directory path, combining -C and -d flags
+// This is used for single-project mode (backward compatibility)
+func getIssuesDir(cmd *cobra.Command) (string, error) {
+	path, _, err := getIssuesDirWithDiscovery(cmd)
+	return path, err
 }
 
 // getProjectSpecs parses -C flags into ProjectSpec list

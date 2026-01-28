@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/itda-work/zap/internal/issue"
 	"github.com/spf13/cobra"
@@ -35,10 +36,28 @@ func init() {
 }
 
 func runMigrate(cmd *cobra.Command, args []string) error {
-	dir, err := getIssuesDir(cmd)
+	// Get issues directory with discovery info
+	dir, wasDiscovered, err := getIssuesDirWithDiscovery(cmd)
 	if err != nil {
 		return err
 	}
+
+	// If discovered from parent directory
+	if wasDiscovered {
+		// Show info message
+		fmt.Fprintf(os.Stderr, "info: Using .issues at %s\n", dir)
+
+		// Check if TTY
+		if !IsTTY() {
+			return fmt.Errorf("cannot modify issues in parent directory from non-interactive session (use -C flag to specify directory explicitly)")
+		}
+
+		// Confirm with user
+		if !confirmYesDefault("Proceed with this .issues directory?") {
+			return fmt.Errorf("operation cancelled")
+		}
+	}
+
 	store := issue.NewStore(dir)
 
 	// Detect legacy structure
