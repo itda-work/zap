@@ -128,9 +128,19 @@ func getIssuesDirWithDiscovery(cmd *cobra.Command) (string, bool, error) {
 
 // getIssuesDir returns the issues directory path, combining -C and -d flags
 // This is used for single-project mode (backward compatibility)
+// If the directory was discovered (not in CWD), prints an info message to stderr
 func getIssuesDir(cmd *cobra.Command) (string, error) {
-	path, _, err := getIssuesDirWithDiscovery(cmd)
-	return path, err
+	path, wasDiscovered, err := getIssuesDirWithDiscovery(cmd)
+	if err != nil {
+		return "", err
+	}
+
+	// If discovered from parent directory, show info message
+	if wasDiscovered {
+		fmt.Fprintf(os.Stderr, "info: Using .issues at %s\n", path)
+	}
+
+	return path, nil
 }
 
 // getProjectSpecs parses -C flags into ProjectSpec list
