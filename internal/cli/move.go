@@ -101,7 +101,7 @@ func runSetCmd(cmd *cobra.Command, args []string) error {
 
 		// Check if TTY
 		if !IsTTY() {
-			return fmt.Errorf("cannot modify issues in parent directory from non-interactive session (use -C flag to specify directory explicitly)")
+			return fmt.Errorf("cannot modify issues in parent directory from non-interactive session (use --project or -d flag to specify directory explicitly)")
 		}
 
 		// Confirm with user

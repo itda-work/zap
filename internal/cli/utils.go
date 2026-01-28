@@ -44,7 +44,11 @@ func isRecentlyClosed(updatedAt time.Time, state string, duration time.Duration)
 func confirm(prompt string) bool {
 	fmt.Printf("%s [y/N]: ", prompt)
 	reader := bufio.NewReader(os.Stdin)
-	response, _ := reader.ReadString('\n')
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		// On error (EOF, closed stdin), default to No for safety
+		return false
+	}
 	response = strings.ToLower(strings.TrimSpace(response))
 	return response == "y" || response == "yes"
 }
@@ -53,7 +57,11 @@ func confirm(prompt string) bool {
 func confirmYesDefault(prompt string) bool {
 	fmt.Printf("%s [Y/n]: ", prompt)
 	reader := bufio.NewReader(os.Stdin)
-	response, _ := reader.ReadString('\n')
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		// On error (EOF, closed stdin), default to No for safety
+		return false
+	}
 	response = strings.ToLower(strings.TrimSpace(response))
 
 	// Empty or "y" or "yes" = true
