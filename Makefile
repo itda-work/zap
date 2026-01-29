@@ -8,7 +8,8 @@ LDFLAGS := -ldflags "-s -w -X github.com/itda-work/zap/internal/cli.Version=$(VE
 DIST := dist
 
 build:
-	go build $(LDFLAGS) -o $(BINARY) ./cmd/zap/
+	@mkdir -p bin
+	go build $(LDFLAGS) -o bin/$(BINARY) ./cmd/zap/
 
 install:
 	go install $(LDFLAGS) ./cmd/zap/
@@ -21,7 +22,7 @@ test-cover:
 	go tool cover -html=coverage.out -o coverage.html
 
 clean:
-	rm -f $(BINARY) coverage.out coverage.html
+	rm -rf bin coverage.out coverage.html
 
 dist-clean:
 	rm -rf $(DIST)
@@ -60,8 +61,8 @@ release: build-all build
 	@echo "Generating release notes..."
 	@PREV_TAG=$$(git describe --tags --abbrev=0 $(TAG)^ 2>/dev/null || echo ""); \
 	if [ -n "$$PREV_TAG" ]; then \
-		./$(BINARY) release-notes "$$PREV_TAG" $(TAG) > $(DIST)/release-notes.md; \
+		./bin/$(BINARY) release-notes "$$PREV_TAG" $(TAG) > $(DIST)/release-notes.md; \
 	else \
-		./$(BINARY) release-notes $(TAG) > $(DIST)/release-notes.md; \
+		./bin/$(BINARY) release-notes $(TAG) > $(DIST)/release-notes.md; \
 	fi
 	gh release create $(TAG) $(DIST)/* --title "$(TAG)" --notes-file $(DIST)/release-notes.md

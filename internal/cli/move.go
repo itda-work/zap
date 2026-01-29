@@ -13,14 +13,12 @@ import (
 
 var setCmd = &cobra.Command{
 	Use:   "set <state> <number>",
-	Short: "Set issue state (open, wip, check, review, done, closed)",
-	Long: `Set issue state to one of: open, wip, check, review, done, closed.
+	Short: "Set issue state (open, wip, done, closed)",
+	Long: `Set issue state to one of: open, wip, done, closed.
 
 Examples:
   zap set done 1
   zap set wip 5
-  zap set check 3
-  zap set review 3
   zap set open 2
   zap set closed 3`,
 	Args:              cobra.ExactArgs(2),
@@ -44,8 +42,6 @@ func completeSetArgs(cmd *cobra.Command, args []string, toComplete string) ([]st
 		states := []string{
 			"open\tReopen issue",
 			"wip\tStart working on issue",
-			"check\tSelf-verify against plan criteria",
-			"review\tExternal review or final check",
 			"done\tMark issue as completed",
 			"closed\tClose issue (cancelled/on-hold)",
 		}
@@ -74,7 +70,7 @@ func runSetCmd(cmd *cobra.Command, args []string) error {
 	stateStr := args[0]
 	targetState, ok := issue.ParseState(stateStr)
 	if !ok {
-		return fmt.Errorf("invalid state: %s (valid: open, wip, check, review, done, closed)", stateStr)
+		return fmt.Errorf("invalid state: %s (valid: open, wip, done, closed)", stateStr)
 	}
 
 	// Check for multi-project mode
@@ -138,13 +134,9 @@ func printTransitionTip(state issue.State) {
 	var tip string
 	switch state {
 	case issue.StateWip:
-		tip = "Tip: Do 섹션에 구현 내용을 기록하세요."
-	case issue.StateCheck:
-		tip = "Tip: Check 섹션에 Plan 기준 대비 검증 결과를 기록하세요."
-	case issue.StateReview:
-		tip = "Tip: Review 섹션에 리뷰어와 피드백을 기록하세요."
+		tip = "Tip: 구현 내용을 이슈에 기록하세요."
 	case issue.StateDone:
-		tip = "Tip: Act 섹션에 개선 조치를 기록하세요."
+		tip = "Tip: 작업이 완료되었습니다."
 	default:
 		return
 	}

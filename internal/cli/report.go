@@ -18,9 +18,9 @@ import (
 )
 
 var reportCmd = &cobra.Command{
-	Use:   "report [commit-range | issue-numbers...]",
+	Use:     "report [commit-range | issue-numbers...]",
 	Aliases: []string{"rep"},
-	Short: "Generate work report for team sharing",
+	Short:   "Generate work report for team sharing",
 	Long: `Generate a work report by analyzing commits and issues within a specified period.
 
 The report includes:
@@ -511,11 +511,9 @@ func formatReportMarkdown(data *ReportData) string {
 			byState[iss.State] = append(byState[iss.State], iss)
 		}
 
-		stateOrder := []issue.State{issue.StateDone, issue.StateReview, issue.StateCheck, issue.StateWip, issue.StateOpen, issue.StateClosed}
+		stateOrder := []issue.State{issue.StateDone, issue.StateWip, issue.StateOpen, issue.StateClosed}
 		stateNames := map[issue.State]string{
 			issue.StateDone:   "완료 (done)",
-			issue.StateReview: "리뷰 중 (review)",
-			issue.StateCheck:  "검증 중 (check)",
 			issue.StateWip:    "진행 중 (wip)",
 			issue.StateOpen:   "신규 (open)",
 			issue.StateClosed: "취소 (closed)",
@@ -615,13 +613,13 @@ func formatReportText(data *ReportData) string {
 
 // ReportJSON is the JSON output structure.
 type ReportJSON struct {
-	Period    string            `json:"period"`
-	Since     string            `json:"since"`
-	Until     string            `json:"until"`
-	Summary   string            `json:"summary,omitempty"`
-	Commits   []CommitJSON      `json:"commits"`
-	Issues    []IssueJSON       `json:"issues"`
-	FileStats FileStatsJSON     `json:"file_stats"`
+	Period    string        `json:"period"`
+	Since     string        `json:"since"`
+	Until     string        `json:"until"`
+	Summary   string        `json:"summary,omitempty"`
+	Commits   []CommitJSON  `json:"commits"`
+	Issues    []IssueJSON   `json:"issues"`
+	FileStats FileStatsJSON `json:"file_stats"`
 }
 
 // CommitJSON is the JSON structure for a commit.

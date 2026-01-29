@@ -10,31 +10,29 @@ type State string
 const (
 	StateOpen   State = "open"
 	StateWip    State = "wip"
-	StateCheck  State = "check"
-	StateReview State = "review"
 	StateDone   State = "done"
 	StateClosed State = "closed"
 )
 
 // AllStates returns all valid states
 func AllStates() []State {
-	return []State{StateOpen, StateWip, StateCheck, StateReview, StateDone, StateClosed}
+	return []State{StateOpen, StateWip, StateDone, StateClosed}
 }
 
 // ActiveStates returns states considered "active" (not done)
 func ActiveStates() []State {
-	return []State{StateOpen, StateWip, StateCheck, StateReview}
+	return []State{StateOpen, StateWip}
 }
 
 // Issue represents a single issue
 type Issue struct {
-	Number    int       `yaml:"number"`
-	Title     string    `yaml:"title"`
-	State     State     `yaml:"state"`
-	Labels    []string  `yaml:"labels"`
-	Assignees []string  `yaml:"assignees"`
-	CreatedAt time.Time `yaml:"created_at"`
-	UpdatedAt time.Time `yaml:"updated_at"`
+	Number    int        `yaml:"number"`
+	Title     string     `yaml:"title"`
+	State     State      `yaml:"state"`
+	Labels    []string   `yaml:"labels"`
+	Assignees []string   `yaml:"assignees"`
+	CreatedAt time.Time  `yaml:"created_at"`
+	UpdatedAt time.Time  `yaml:"updated_at"`
 	ClosedAt  *time.Time `yaml:"closed_at,omitempty"`
 
 	// Body contains the markdown content after frontmatter
@@ -46,7 +44,7 @@ type Issue struct {
 
 // IsActive returns true if the issue is in an active state
 func (i *Issue) IsActive() bool {
-	return i.State == StateOpen || i.State == StateWip || i.State == StateCheck || i.State == StateReview
+	return i.State == StateOpen || i.State == StateWip
 }
 
 // StateDir returns the directory name for a given state
@@ -61,10 +59,6 @@ func ParseState(s string) (State, bool) {
 		return StateOpen, true
 	case "wip":
 		return StateWip, true
-	case "check":
-		return StateCheck, true
-	case "review":
-		return StateReview, true
 	case "done":
 		return StateDone, true
 	case "closed":
