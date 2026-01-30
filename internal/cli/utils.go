@@ -12,6 +12,8 @@ import (
 	"github.com/itda-work/zap/internal/ai"
 	"github.com/itda-work/zap/internal/issue"
 	"github.com/itda-work/zap/internal/project"
+	"github.com/mattn/go-runewidth"
+	"golang.org/x/term"
 )
 
 const (
@@ -190,4 +192,82 @@ func sortProjectIssuesByStateAndTime(issues []*project.ProjectIssue) {
 		// Same state: sort by UpdatedAt descending
 		return issues[i].UpdatedAt.After(issues[j].UpdatedAt)
 	})
+}
+
+// getTerminalWidth returns the current terminal width.
+// Falls back to 80 columns if detection fails.
+func getTerminalWidth() int {
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || width <= 0 {
+		return 80
+	}
+	return width
+}
+
+// truncateLine truncates a string containing ANSI escape codes to fit within
+// maxWidth visible characters. If truncation occurs, an ellipsis (…) is appended.
+// Handles CJK wide characters correctly via go-runewidth.
+func truncateLine(s string, maxWidth int) string {
+	if maxWidth <= 0 {
+		return ""
+	}
+
+	visibleWidth := 0
+	inEscape := false
+	for _, r := range s {
+		if r == '\033' {
+			inEscape = true
+			continue
+		}
+		if inEscape {
+			if (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') {
+				inEscape = false
+			}
+			continue
+		}
+		visibleWidth += runewidth.RuneWidth(r)
+		if visibleWidth > maxWidth {
+			break
+		}
+	}
+
+	if visibleWidth <= maxWidth {
+		return s
+	}
+
+	limit := maxWidth - 1
+	if limit < 0 {
+		limit = 0
+	}
+
+	visibleWidth = 0
+	inEscape = false
+	var result strings.Builder
+	result.Grow(len(s))
+
+	for _, r := range s {
+		if r == '\033' {
+			inEscape = true
+			result.WriteRune(r)
+			continue
+		}
+		if inEscape {
+			result.WriteRune(r)
+			if (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') {
+				inEscape = false
+			}
+			continue
+		}
+
+		w := runewidth.RuneWidth(r)
+		if visibleWidth+w > limit {
+			result.WriteString(colorReset)
+			result.WriteRune('…')
+			return result.String()
+		}
+		visibleWidth += w
+		result.WriteRune(r)
+	}
+
+	return result.String()
 }

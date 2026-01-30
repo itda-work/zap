@@ -331,6 +331,8 @@ func printMultiProjectWatchIssueList(issues []*project.ProjectIssue, tracker *ch
 		activeChanges = tracker.getActiveChanges()
 	}
 
+	termWidth := getTerminalWidth()
+
 	for _, pIss := range issues {
 		style := stateStyle[pIss.State]
 		labels := ""
@@ -346,14 +348,18 @@ func printMultiProjectWatchIssueList(issues []*project.ProjectIssue, tracker *ch
 		title := colorize(pIss.Title, style.titleColor)
 		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
 		ref := colorize(fmt.Sprintf("%-12s", pIss.Ref()), colorCyan)
-		fmt.Printf("%s %s %s%s%s\n", tag, ref, title, labels, dateSuffix)
+		line := fmt.Sprintf("%s %s %s%s%s", tag, ref, title, labels, dateSuffix)
+		fmt.Println(truncateLine(line, termWidth))
 
 		if entry, ok := activeChanges[pIss.FilePath]; ok {
-			fmt.Printf("                      %s %s\n", colorize("↳", colorCyan), colorize(entry.summary, colorGray))
+			changeLine := fmt.Sprintf("                      %s %s", colorize("↳", colorCyan), colorize(entry.summary, colorGray))
+			fmt.Println(truncateLine(changeLine, termWidth))
 			if entry.aiLoading {
-				fmt.Printf("                      %s %s\n", colorize("↳", colorCyan), colorize("Loading ...", colorGray))
+				aiLine := fmt.Sprintf("                      %s %s", colorize("↳", colorCyan), colorize("Loading ...", colorGray))
+				fmt.Println(truncateLine(aiLine, termWidth))
 			} else if entry.aiSummary != "" {
-				fmt.Printf("                      %s %s\n", colorize("↳", colorCyan), colorize(entry.aiSummary, colorMagenta))
+				aiLine := fmt.Sprintf("                      %s %s", colorize("↳", colorCyan), colorize(entry.aiSummary, colorMagenta))
+				fmt.Println(truncateLine(aiLine, termWidth))
 			}
 		}
 	}
@@ -454,6 +460,8 @@ func printWatchIssueList(issues []*issue.Issue, recentClosedDuration time.Durati
 		activeChanges = tracker.getActiveChanges()
 	}
 
+	termWidth := getTerminalWidth()
+
 	for _, iss := range issues {
 		style := stateStyle[iss.State]
 		labels := ""
@@ -468,32 +476,36 @@ func printWatchIssueList(issues []*issue.Issue, recentClosedDuration time.Durati
 
 		recentlyClosed := isRecentlyClosed(iss.UpdatedAt, string(iss.State), recentClosedDuration)
 
+		var line string
 		if recentlyClosed {
 			tag := colorizeWithBg(fmt.Sprintf("%-8s", style.tag), style.color, bgGray)
 			titlePart := colorizeWithBg(iss.Title, style.titleColor, bgGray)
 			labelsPart := colorizeWithBg(labels, "", bgGray)
 			datePart := colorizeWithBg(strings.TrimPrefix(dateSuffix, " "), colorGray, bgGray)
 
-			line := fmt.Sprintf("%s #%-4d %s", tag, iss.Number, titlePart)
+			line = fmt.Sprintf("%s #%-4d %s", tag, iss.Number, titlePart)
 			if labels != "" {
 				line += " " + labelsPart
 			}
 			if dateSuffix != "" {
 				line += " " + datePart
 			}
-			fmt.Println(line)
 		} else {
 			title := colorize(iss.Title, style.titleColor)
 			tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
-			fmt.Printf("%s #%-4d %s%s%s\n", tag, iss.Number, title, labels, dateSuffix)
+			line = fmt.Sprintf("%s #%-4d %s%s%s", tag, iss.Number, title, labels, dateSuffix)
 		}
+		fmt.Println(truncateLine(line, termWidth))
 
 		if entry, ok := activeChanges[iss.FilePath]; ok {
-			fmt.Printf("         %s %s\n", colorize("↳", colorCyan), colorize(entry.summary, colorGray))
+			changeLine := fmt.Sprintf("         %s %s", colorize("↳", colorCyan), colorize(entry.summary, colorGray))
+			fmt.Println(truncateLine(changeLine, termWidth))
 			if entry.aiLoading {
-				fmt.Printf("         %s %s\n", colorize("↳", colorCyan), colorize("Loading ...", colorGray))
+				aiLine := fmt.Sprintf("         %s %s", colorize("↳", colorCyan), colorize("Loading ...", colorGray))
+				fmt.Println(truncateLine(aiLine, termWidth))
 			} else if entry.aiSummary != "" {
-				fmt.Printf("         %s %s\n", colorize("↳", colorCyan), colorize(entry.aiSummary, colorMagenta))
+				aiLine := fmt.Sprintf("         %s %s", colorize("↳", colorCyan), colorize(entry.aiSummary, colorMagenta))
+				fmt.Println(truncateLine(aiLine, termWidth))
 			}
 		}
 	}
