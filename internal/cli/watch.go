@@ -94,8 +94,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	winchChan := make(chan os.Signal, 1)
-	signal.Notify(winchChan, syscall.SIGWINCH)
+	winchChan := newWinchChan()
 
 	renderWatch(dir, tracker)
 
@@ -200,8 +199,7 @@ func runMultiProjectWatch(cmd *cobra.Command, args []string) error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	winchChan := make(chan os.Signal, 1)
-	signal.Notify(winchChan, syscall.SIGWINCH)
+	winchChan := newWinchChan()
 
 	renderMultiProjectWatch(multiStore, tracker)
 
