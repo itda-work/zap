@@ -94,6 +94,9 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
+	winchChan := make(chan os.Signal, 1)
+	signal.Notify(winchChan, syscall.SIGWINCH)
+
 	renderWatch(dir, tracker)
 
 	var debounceTimer *time.Timer
@@ -113,6 +116,9 @@ func runWatch(cmd *cobra.Command, args []string) error {
 			fmt.Print("\033[H\033[2J")
 			fmt.Println("Watch mode exited.")
 			return nil
+
+		case <-winchChan:
+			renderWatch(dir, tracker)
 
 		case <-ticker.C:
 			renderWatch(dir, tracker)
@@ -194,6 +200,9 @@ func runMultiProjectWatch(cmd *cobra.Command, args []string) error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
+	winchChan := make(chan os.Signal, 1)
+	signal.Notify(winchChan, syscall.SIGWINCH)
+
 	renderMultiProjectWatch(multiStore, tracker)
 
 	var debounceTimer *time.Timer
@@ -213,6 +222,9 @@ func runMultiProjectWatch(cmd *cobra.Command, args []string) error {
 			fmt.Print("\033[H\033[2J")
 			fmt.Println("Watch mode exited.")
 			return nil
+
+		case <-winchChan:
+			renderMultiProjectWatch(multiStore, tracker)
 
 		case <-ticker.C:
 			renderMultiProjectWatch(multiStore, tracker)
