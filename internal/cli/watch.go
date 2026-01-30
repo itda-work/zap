@@ -10,6 +10,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/itda-work/zap/internal/issue"
+	"github.com/itda-work/zap/internal/project"
 	"github.com/spf13/cobra"
 )
 
@@ -39,48 +40,44 @@ func init() {
 }
 
 func runWatch(cmd *cobra.Command, args []string) error {
+	if isMultiProjectMode(cmd) {
+		return runMultiProjectWatch(cmd, args)
+	}
+
 	dir, err := getIssuesDir(cmd)
 	if err != nil {
 		return err
 	}
 
-	// Create file watcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return fmt.Errorf("failed to create watcher: %w", err)
 	}
 	defer watcher.Close()
 
-	// Watch the .issues directory
 	if err := watcher.Add(dir); err != nil {
 		return fmt.Errorf("failed to watch directory: %w", err)
 	}
 
-	// Setup signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	// Initial render
 	renderWatch(dir)
 
-	// Debounce timer for handling rapid file changes
 	var debounceTimer *time.Timer
 	debounceDuration := 100 * time.Millisecond
 
-	// Periodic refresh ticker (1 minute) to update relative times
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-sigChan:
-			// Clear screen and show exit message
 			fmt.Print("\033[H\033[2J")
 			fmt.Println("Watch mode exited.")
 			return nil
 
 		case <-ticker.C:
-			// Periodic refresh to update relative times
 			renderWatch(dir)
 
 		case event, ok := <-watcher.Events:
@@ -88,12 +85,10 @@ func runWatch(cmd *cobra.Command, args []string) error {
 				return nil
 			}
 
-			// Only react to .md file changes
 			if !strings.HasSuffix(event.Name, ".md") {
 				continue
 			}
 
-			// Debounce: reset timer on each event
 			if debounceTimer != nil {
 				debounceTimer.Stop()
 			}
@@ -105,36 +100,98 @@ func runWatch(cmd *cobra.Command, args []string) error {
 			if !ok {
 				return nil
 			}
-			// Log error but continue watching
 			fmt.Fprintf(os.Stderr, "Watch error: %v\n", err)
 		}
 	}
 }
 
-func renderWatch(dir string) {
-	// Clear screen and move cursor to top-left
+func runMultiProjectWatch(cmd *cobra.Command, args []string) error {
+	multiStore, err := getMultiStore(cmd)
+	if err != nil {
+		return err
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("failed to create watcher: %w", err)
+	}
+	defer watcher.Close()
+
+	for _, proj := range multiStore.Projects() {
+		dir := proj.Store.BaseDir()
+		if err := watcher.Add(dir); err != nil {
+			return fmt.Errorf("failed to watch directory %s: %w", dir, err)
+		}
+	}
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	renderMultiProjectWatch(multiStore)
+
+	var debounceTimer *time.Timer
+	debounceDuration := 100 * time.Millisecond
+
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-sigChan:
+			fmt.Print("\033[H\033[2J")
+			fmt.Println("Watch mode exited.")
+			return nil
+
+		case <-ticker.C:
+			renderMultiProjectWatch(multiStore)
+
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return nil
+			}
+
+			if !strings.HasSuffix(event.Name, ".md") {
+				continue
+			}
+
+			if debounceTimer != nil {
+				debounceTimer.Stop()
+			}
+			debounceTimer = time.AfterFunc(debounceDuration, func() {
+				renderMultiProjectWatch(multiStore)
+			})
+
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return nil
+			}
+			fmt.Fprintf(os.Stderr, "Watch error: %v\n", err)
+		}
+	}
+}
+
+func renderMultiProjectWatch(multiStore *project.MultiStore) {
 	fmt.Print("\033[H\033[2J")
 
-	// Print header
-	fmt.Println(colorize("Issue Monitor", colorCyan) + " " + colorize("(Press Ctrl+C to exit)", colorGray))
+	fmt.Println(colorize("Issue Monitor", colorCyan) + " " +
+		colorize(fmt.Sprintf("(%d projects)", multiStore.ProjectCount()), colorGray) + " " +
+		colorize("(Press Ctrl+C to exit)", colorGray))
 	fmt.Println(strings.Repeat("─", 60))
 
-	store := issue.NewStore(dir)
-
-	// Get all issues for statistics
-	allIssues, err := store.List(issue.AllStates()...)
+	allProjectIssues, err := multiStore.ListAll(issue.AllStates()...)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
-
-	// Calculate and print statistics
+	allIssues := make([]*issue.Issue, len(allProjectIssues))
+	for i, pIss := range allProjectIssues {
+		allIssues[i] = pIss.Issue
+	}
 	stats := calculateStats(allIssues)
 	printWatchStats(stats)
 
 	fmt.Println(strings.Repeat("─", 60))
 
-	// Determine which states to show in list
 	var states []issue.State
 	if watchState != "" {
 		state, ok := issue.ParseState(watchState)
@@ -149,7 +206,97 @@ func renderWatch(dir string) {
 		states = issue.ActiveStates()
 	}
 
-	// Get filtered issues for list
+	var projectIssues []*project.ProjectIssue
+	if watchLabel != "" {
+		projectIssues, err = multiStore.FilterByLabel(watchLabel, states...)
+	} else if watchAssignee != "" {
+		projectIssues, err = multiStore.FilterByAssignee(watchAssignee, states...)
+	} else {
+		projectIssues, err = multiStore.ListAll(states...)
+	}
+
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	if len(projectIssues) == 0 {
+		fmt.Println(colorize("No active issues.", colorGray))
+	} else {
+		sortProjectIssuesByStateAndTime(projectIssues)
+		printMultiProjectWatchIssueList(projectIssues)
+	}
+
+	fmt.Println(strings.Repeat("─", 60))
+	fmt.Printf("Last updated: %s\n", colorize(time.Now().Format("15:04:05"), colorGray))
+}
+
+func printMultiProjectWatchIssueList(issues []*project.ProjectIssue) {
+	stateStyle := map[issue.State]struct {
+		tag        string
+		color      string
+		titleColor string
+	}{
+		issue.StateOpen:   {"[open]", "", ""},
+		issue.StateWip:    {"[wip]", colorBrightYellow, colorBrightYellow},
+		issue.StateDone:   {"[done]", colorBrightGreen, colorBrightGreen},
+		issue.StateClosed: {"[closed]", colorGray, colorLightGray},
+	}
+
+	for _, pIss := range issues {
+		style := stateStyle[pIss.State]
+		labels := ""
+		if len(pIss.Labels) > 0 {
+			labels = fmt.Sprintf(" [%s]", strings.Join(pIss.Labels, ", "))
+		}
+
+		dateSuffix := ""
+		if !watchNoDate {
+			dateSuffix = fmt.Sprintf(" %s", colorize(formatRelativeTime(pIss.UpdatedAt), colorGray))
+		}
+
+		title := colorize(pIss.Title, style.titleColor)
+		tag := colorize(fmt.Sprintf("%-8s", style.tag), style.color)
+		ref := colorize(fmt.Sprintf("%-12s", pIss.Ref()), colorCyan)
+		fmt.Printf("%s %s %s%s%s\n", tag, ref, title, labels, dateSuffix)
+	}
+
+	fmt.Printf("\nTotal: %d issues\n", len(issues))
+}
+
+func renderWatch(dir string) {
+	fmt.Print("\033[H\033[2J")
+
+	fmt.Println(colorize("Issue Monitor", colorCyan) + " " + colorize("(Press Ctrl+C to exit)", colorGray))
+	fmt.Println(strings.Repeat("─", 60))
+
+	store := issue.NewStore(dir)
+
+	allIssues, err := store.List(issue.AllStates()...)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	stats := calculateStats(allIssues)
+	printWatchStats(stats)
+
+	fmt.Println(strings.Repeat("─", 60))
+
+	var states []issue.State
+	if watchState != "" {
+		state, ok := issue.ParseState(watchState)
+		if !ok {
+			fmt.Printf("Invalid state: %s\n", watchState)
+			return
+		}
+		states = []issue.State{state}
+	} else if watchAll {
+		states = issue.AllStates()
+	} else {
+		states = issue.ActiveStates()
+	}
+
 	var issues []*issue.Issue
 	if watchLabel != "" {
 		issues, err = store.FilterByLabel(watchLabel, states...)
@@ -164,7 +311,6 @@ func renderWatch(dir string) {
 		return
 	}
 
-	// Include recently closed issues if not showing all and not filtering by specific state
 	recentClosedDuration := getRecentClosedDuration()
 	if !watchAll && watchState == "" && recentClosedDuration > 0 {
 		recentIssues, err := getRecentlyClosedIssuesForWatch(store, recentClosedDuration, watchLabel, watchAssignee)
@@ -176,12 +322,10 @@ func renderWatch(dir string) {
 	if len(issues) == 0 {
 		fmt.Println(colorize("No active issues.", colorGray))
 	} else {
-		// Sort by state priority (done → closed → wip → open), then by UpdatedAt descending
 		sortIssuesByStateAndTime(issues)
 		printWatchIssueList(issues, recentClosedDuration)
 	}
 
-	// Print footer with last updated time
 	fmt.Println(strings.Repeat("─", 60))
 	fmt.Printf("Last updated: %s\n", colorize(time.Now().Format("15:04:05"), colorGray))
 }
@@ -215,23 +359,19 @@ func printWatchIssueList(issues []*issue.Issue, recentClosedDuration time.Durati
 			labels = fmt.Sprintf(" [%s]", strings.Join(iss.Labels, ", "))
 		}
 
-		// Updated time suffix
 		dateSuffix := ""
 		if !watchNoDate {
 			dateSuffix = fmt.Sprintf(" %s", colorize(formatRelativeTime(iss.UpdatedAt), colorGray))
 		}
 
-		// Check if this is a recently closed issue
 		recentlyClosed := isRecentlyClosed(iss.UpdatedAt, string(iss.State), recentClosedDuration)
 
 		if recentlyClosed {
-			// Apply background color for entire row of recently closed issues
 			tag := colorizeWithBg(fmt.Sprintf("%-8s", style.tag), style.color, bgGray)
 			titlePart := colorizeWithBg(iss.Title, style.titleColor, bgGray)
 			labelsPart := colorizeWithBg(labels, "", bgGray)
 			datePart := colorizeWithBg(strings.TrimPrefix(dateSuffix, " "), colorGray, bgGray)
 
-			// Build the line with consistent background
 			line := fmt.Sprintf("%s #%-4d %s", tag, iss.Number, titlePart)
 			if labels != "" {
 				line += " " + labelsPart
@@ -250,7 +390,6 @@ func printWatchIssueList(issues []*issue.Issue, recentClosedDuration time.Durati
 	fmt.Printf("\nTotal: %d issues\n", len(issues))
 }
 
-// getRecentlyClosedIssuesForWatch returns done/closed issues that were updated within the given duration
 func getRecentlyClosedIssuesForWatch(store *issue.Store, duration time.Duration, labelFilter, assigneeFilter string) ([]*issue.Issue, error) {
 	closedStates := []issue.State{issue.StateDone, issue.StateClosed}
 
@@ -269,7 +408,6 @@ func getRecentlyClosedIssuesForWatch(store *issue.Store, duration time.Duration,
 		return nil, err
 	}
 
-	// Filter to only recently closed issues
 	var recentIssues []*issue.Issue
 	for _, iss := range issues {
 		if isRecentlyClosed(iss.UpdatedAt, string(iss.State), duration) {
