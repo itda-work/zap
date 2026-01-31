@@ -1,12 +1,13 @@
 ---
 number: 57
 title: watch AI 요약에 gemini flash 모델 하드코딩 적용
-state: open
+state: done
 labels:
     - enhancement
 assignees: []
 created_at: "2026-01-31T07:01:46Z"
-updated_at: "2026-01-31T07:04:57Z"
+updated_at: "2026-01-31T08:45:09Z"
+closed_at: "2026-01-31T08:45:09Z"
 ---
 
 ## 배경
