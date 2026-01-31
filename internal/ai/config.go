@@ -40,7 +40,8 @@ func DefaultConfig() *Config {
 	return &Config{
 		Default: "auto",
 		Claude: ProviderConfig{
-			Bin: "claude",
+			Bin:   "claude",
+			Model: "haiku",
 		},
 		Codex: ProviderConfig{
 			Bin: "codex",

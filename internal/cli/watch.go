@@ -52,7 +52,7 @@ func init() {
 	watchCmd.Flags().StringVar(&watchAssignee, "assignee", "", "Filter by assignee")
 	watchCmd.Flags().BoolVar(&watchNoDate, "no-date", false, "Hide updated time from output")
 	watchCmd.Flags().IntVar(&watchDuration, "duration", 0, "Duration in minutes to show change summaries (default: 10, 0=disabled)")
-	watchCmd.Flags().BoolVar(&watchAI, "ai", false, "Enable AI-powered change summaries (gemini → claude fallback)")
+	watchCmd.Flags().BoolVar(&watchAI, "ai", false, "Enable AI-powered change summaries (claude → gemini fallback)")
 }
 
 func runWatch(cmd *cobra.Command, args []string) error {
@@ -555,15 +555,15 @@ func (ct *changeTracker) initAI() {
 		return
 	}
 
-	gemini := ai.NewClient(ai.ProviderGemini, cfg)
-	if gemini != nil && gemini.IsAvailable() {
-		ct.aiClient = gemini
-		return
-	}
-
 	claude := ai.NewClient(ai.ProviderClaude, cfg)
 	if claude != nil && claude.IsAvailable() {
 		ct.aiClient = claude
+		return
+	}
+
+	gemini := ai.NewClient(ai.ProviderGemini, cfg)
+	if gemini != nil && gemini.IsAvailable() {
+		ct.aiClient = gemini
 	}
 }
 
@@ -631,10 +631,17 @@ func (ct *changeTracker) fetchAISummary(filePath string, old, new *issue.Issue) 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	resp, err := ct.aiClient.Complete(ctx, &ai.Request{
-		Prompt:    prompt,
-		MaxTokens: 200,
-	})
+	req := &ai.Request{
+		Prompt: prompt,
+	}
+	switch ct.aiClient.Name() {
+	case "gemini":
+		req.Model = "flash"
+	case "claude":
+		req.Model = "haiku"
+	}
+
+	resp, err := ct.aiClient.Complete(ctx, req)
 
 	ct.mu.Lock()
 	defer ct.mu.Unlock()
